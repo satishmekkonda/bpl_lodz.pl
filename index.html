@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BPL 2026 | Łódź</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; padding: 20px; color: #1a1a1b; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
+        .header-row { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 3px solid #2563eb; margin-bottom: 30px; padding-bottom: 10px; }
+        h1 { color: #1e3a8a; font-size: 2.2em; margin: 0; flex-grow: 1; text-align: center; }
+        .today-date { font-size: 0.9em; color: #64748b; font-weight: bold; min-width: 100px; text-align: right; }
+        
+        /* ENHANCED WELCOME SCREEN */
+        .welcome-screen { 
+            text-align: center; 
+            padding: 80px 40px; 
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+            border-radius: 12px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        .welcome-screen::before {
+            content: "🏸";
+            position: absolute;
+            font-size: 15rem;
+            opacity: 0.1;
+            right: -50px;
+            bottom: -50px;
+            transform: rotate(-20deg);
+        }
+        .welcome-logo {
+            width: 120px;
+            height: 120px;
+            background: white;
+            border-radius: 50%;
+            margin: 0 auto 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .welcome-screen h2 { font-size: 2.8em; color: white; margin-bottom: 15px; font-weight: 800; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        .welcome-screen p { font-size: 1.2em; margin-bottom: 35px; opacity: 0.9; }
+        
+        .left-align { text-align: left; width: 100%; }
+        .center-controls { display: flex; flex-direction: column; align-items: center; margin: 20px 0; }
+        .input-group { display: flex; gap: 10px; justify-content: center; width: 100%; margin-bottom: 10px; }
+        h2 { color: #1e3a8a; font-size: 1.3em; margin-top: 0; }
+        .hidden { display: none; }
+        input, button, select { padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; outline: none; }
+        input:disabled { background-color: #f1f5f9; cursor: not-allowed; }
+        button { cursor: pointer; background-color: #2563eb; color: white; border: none; font-weight: bold; transition: all 0.2s; }
+        button:hover { background-color: #1d4ed8; transform: translateY(-1px); }
+        button.undo { background-color: #f59e0b; }
+        button.back { background-color: #64748b; margin-top: 10px; }
+        button.finish { background-color: #059669; width: 100%; margin-top: 20px; font-size: 1.1em; }
+        .btn-get-started { 
+            background-color: #ffffff; 
+			color: #1e3a8a; 
+			padding: 18px 50px; 
+			font-size: 1.3em; 
+			border-radius: 50px; 
+			box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+			position: relative; /* Ensures it stays above the decorative background */
+			z-index: 10;        /* Forces click priority */
+			cursor: pointer;
+        }
+        .btn-get-started:hover { background-color: #f8fafc; color: #2563eb; box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+        
+        .progress-container { width: 100%; background-color: #e2e8f0; border-radius: 10px; margin-bottom: 20px; height: 20px; position: relative; overflow: hidden; }
+        .progress-bar { height: 100%; background-color: #059669; width: 0%; transition: width 0.3s ease; }
+        .progress-text { position: absolute; width: 100%; text-align: center; font-size: 0.8em; line-height: 20px; font-weight: bold; color: #1e3a8a; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; background: white; }
+        th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: center; }
+        th { background-color: #f8fafc; color: #475569; font-weight: 600; }
+        .self-cell { background-color: #e2e8f0; color: #94a3b8; }
+        .match-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; margin-bottom: 10px; border-radius: 10px; }
+        .court-label, .time-label { padding: 2px 10px; border-radius: 4px; font-size: 0.75em; color: white; font-weight: bold; margin-right: 5px; }
+        .court-label { background: #1e3a8a; }
+        .time-label { background: #64748b; }
+        .player-tag { background: #dbeafe; padding: 6px 14px; border-radius: 20px; font-size: 0.9em; margin: 5px; display: inline-block; border: 1px solid #bfdbfe; font-weight: 500; }
+        .live-standings-box { margin-top: 30px; border: 2px solid #2563eb; padding: 15px; border-radius: 12px; background: #fff; }
+        .score-input.invalid { border-color: #e11d48; background-color: #fff1f2; }
+        .score-input.valid { border-color: #059669; background-color: #f0fdf4; }
+        .error-hint { color: #e11d48; font-size: 0.75em; display: block; margin-top: 5px; font-weight: bold; min-height: 1em; text-align: center; }
+		
+		/* Sharing Styles */
+        .share-row { display: flex; gap: 10px; justify-content: center; margin: 15px 0; }
+        .btn-share { padding: 10px 15px; font-size: 0.9em; border-radius: 6px; display: flex; align-items: center; gap: 5px; }
+        .btn-pdf { background: #dc2626; }
+        .btn-img { background: #0ea5e9; }
+        .btn-email { background: #7c3aed; }
+        .review-card { background: #f1f5f9; padding: 10px; margin: 5px 0; border-radius: 8px; border-left: 4px solid #2563eb; text-align: left; }
+		
+		@media (max-width: 480px) {
+        .welcome-screen {
+            padding: 40px 20px;
+        }
+        .welcome-screen h2 {
+            font-size: 1.8em;
+        }
+        .btn-get-started {
+            padding: 15px 30px; /* Makes the button a bit more thumb-friendly on small screens */
+            font-size: 1.1em;
+        }
+    }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-row">
+        <div style="min-width:100px;"></div>
+        <h1>BPL 2026 | Łódź</h1>
+        <div id="date-display" class="today-date"></div>
+    </div>
+
+    <div id="step-welcome" class="welcome-screen">
+        <div class="welcome-logo">🏸</div>
+        <h2>Badminton Premier League, Łódź 2026</h2>
+        <p>Welcome - Namasthey - Dzień dobry</p>
+        <div style="margin-top: 20px;">
+            <button class="btn-get-started" onclick="showStep('step-manual')">Get Started</button>
+        </div>
+    </div>
+
+    <div id="step-manual" class="hidden">
+        <h2 class="left-align">Manual Team Pairing</h2>
+        <p style="font-size: 0.9em; color: #64748b;">Enter names in pairs (e.g., enter X, then Y to form Team 1).</p>
+        <div class="center-controls">
+            <div id="manual-error" style="font-weight:bold; color:#e11d48; margin-bottom:10px;"></div>
+            <div class="input-group">
+                <input type="text" id="name-manual" placeholder="Player Name..." onkeypress="if(event.key==='Enter') addManualPlayer()">
+                <button onclick="addManualPlayer()">Add Player</button>
+                <button class="undo" onclick="undoManual()">Undo</button>
+            </div>
+        </div>
+        <div id="list-manual" class="left-align"></div>
+        <div style="text-align: center; margin-top: 25px;">
+            <button class="back" style="background:#64748b;" onclick="showStep('step-adv')">Skip Manual Pairing</button>
+            <button id="btn-manual-next" class="hidden" onclick="proceedManual()">Next</button>
+        </div>
+    </div>
+
+    <div id="step-adv" class="hidden">
+        <h2 class="left-align">Player Registration: Captains</h2>
+		<p style="font-size: 0.9em; color: #64748b;">Enter Captain Names for each team, who will be player 1.</p>
+        <div class="center-controls">
+            <div class="input-group">
+                <input type="text" id="name-adv" placeholder="Name..." onkeypress="if(event.key==='Enter') addPlayer('Captains')">
+                <button onclick="addPlayer('Captains')">Add Player</button>
+                <button class="undo" onclick="undo('Captains')">Undo</button>
+            </div>
+        </div>
+        <div id="list-adv" class="left-align"></div>
+        <div style="text-align: center; margin-top: 25px;">
+		<button class="back" onclick="showStep('step-manual')">← Back</button>
+		<button id="btn-to-int" class="hidden" onclick="showStep('step-int')">Next</button></div>
+    </div>
+
+    <div id="step-int" class="hidden">
+        <h2 class="left-align">Player Registration: Vice-Captains</h2>
+		<p style="font-size: 0.9em; color: #64748b;">Vice-Captains will be assigned randomly to each Captain, forming a double's pair.</p>
+        <div class="center-controls">
+            <div id="int-requirement" style="font-weight:bold; color:#e11d48; margin-bottom:15px;"></div>
+            <div class="input-group">
+                <input type="text" id="name-int" placeholder="Name..." onkeypress="if(event.key==='Enter') addPlayer('Vice-Captains')">
+                <button id="add-int-btn" onclick="addPlayer('Vice-Captains')">Add Player</button>
+                <button class="undo" onclick="undo('Vice-Captains')">Undo</button>
+            </div>
+        </div>
+        <div id="list-int" class="left-align"></div>
+        <div style="text-align: center; margin-top: 25px;">
+            <button class="back" onclick="showStep('step-adv')">← Back</button>
+            <button id="gen-btn" class="hidden" onclick="previewTeams('strict')">Next</button></div>
+    </div>
+
+    <div id="step-review" class="hidden">
+        <h2 class="left-align">Review Generated Teams</h2>
+		<p style="font-size: 0.9em; color: #64748b;">Use Shuffle to change partner's (NA for Manual Registrations</p>
+        <div id="review-list"></div>
+        
+        <div id="review-controls" style="margin-top: 25px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
+            <button class="undo" id="btn-shuffle-strict" style="margin: 0;" onclick="previewTeams('strict')">Shuffle VC</button>
+            <button style="background-color: #7c3aed; margin: 0;" id="btn-shuffle-random" onclick="previewTeams('random')">Shuffle C&VC</button>
+            <button class="finish" style="margin: 0; width: 100%;" onclick="showStep('step-courts')">Confirm Teams</button>
+        </div>
+        
+        <div style="text-align: center; margin-top: 15px;">
+            <button id="btn-review-back" class="back" onclick="showStep('step-int')">← Edit Players</button>
+        </div>
+    </div>
+
+    <div id="step-courts" class="hidden">
+        <h2 class="left-align">Tournament Setup</h2>
+        <div class="center-controls">
+            <div class="input-group">
+                <label>Available Courts:</label>
+                <select id="court-count" style="width: 80px;">
+                    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                    <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                    <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Start Time:</label>
+                <select id="start-time"></select>
+            </div>
+            <div style="text-align: center; margin-top: 25px;">
+				<button class="back" onclick="goBackFromCourts()">← Back</button>
+                <button class="finish" style="width: auto; padding: 12px 30px;" onclick="generateSchedule()">Generate Schedule</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tournament-section" class="hidden">
+		<h3 style="margin-top:0; color:#1e3a8a;">Full Schedule</h3>
+        <div class="progress-container">
+            <div id="p-bar" class="progress-bar"></div>
+            <div id="p-text" class="progress-text">Progress: 0%</div>
+        </div>
+        <div id="matches-container"></div>
+        <div class="live-standings-box">
+            <h3 style="margin-top:0; color:#1e3a8a;">📊 Live Standings</h3>
+            <table style="font-size: 0.85em;">
+                <thead><tr><th>Team</th><th>P</th><th>W</th><th>L</th><th>Pts</th><th>Score</th></tr></thead>
+                <tbody id="live-body"></tbody>
+            </table>
+        </div>
+        <div style="text-align: center; margin-top:20px;"><button class="back" onclick="showStep('step-courts')">← Back</button></div>
+        <button id="calc-results-btn" class="finish" onclick="calculateResults()">Finish Group Stage</button>
+    </div>
+
+    <div id="results-section" class="hidden">
+        <div id="capture-results" style="padding: 10px; background: white;">
+            <h2 style="text-align: center;">Group Stage Stats</h2>
+            <h3>Score Matrix</h3>
+            <div style="overflow-x:auto;"><table id="matrix-table"></table></div>
+            <h3>Schedule Recap</h3>
+            <div style="overflow-x:auto;"><table id="recap-table"></table></div>
+        </div>
+        <div class="share-row">
+            <button class="btn-share btn-pdf" onclick="exportPDF('capture-results', 'BPL_Results')">Save PDF</button>
+            <button class="btn-share btn-img" onclick="exportImage('capture-results', 'BPL_Results')">Save Image</button>
+            <button class="btn-share btn-email" onclick="shareEmail('capture-results')">Email</button>
+        </div>
+        <div style="text-align: center;">
+            <button class="back" onclick="showStep('tournament-section')">← Back</button>
+            <button class="finish" style="width: auto; padding: 12px 30px; margin-left:10px;" onclick="showLeaderboard()">View Leaderboard & Playoffs →</button>
+        </div>
+    </div>
+
+    <div id="leaderboard-section" class="hidden">
+        <div id="capture-leaderboard" style="padding: 10px; background: white;">
+            <h2 style="text-align: center;">Final Standings</h2>
+            <table id="points-table">
+                <thead><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>L</th><th>Pts</th><th>Score</th></tr></thead>
+                <tbody id="table-body"></tbody>
+            </table>
+            <div id="playoff-container" class="playoff-box" style="background: #eff6ff; border: 2px dashed #2563eb; padding: 20px; border-radius: 12px; margin: 20px 0; text-align: center;"></div>
+        </div>
+        <div class="share-row">
+            <button class="btn-share btn-pdf" onclick="exportPDF('capture-leaderboard', 'BPL_Leaderboard')">Save PDF</button>
+            <button class="btn-share btn-img" onclick="exportImage('capture-leaderboard', 'BPL_Leaderboard')">Save Image</button>
+            <button class="btn-share btn-email" onclick="shareEmail('capture-leaderboard')">Email</button>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="back" onclick="showStep('results-section')">← Back</button>
+			<button onclick="clearTournament()" style="background:#dc2626; color:white; padding:12px; border-radius:8px; border:none; font-weight:bold; margin-left:10px;">New Tournament</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function(){ emailjs.init("YOUR_PUBLIC_KEY"); })();
+    const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    document.getElementById('date-display').innerText = today;
+    
+    let advPlayers = [], intPlayers = [], manualPlayers = [], pairs = [], matches = [];
+    let isManualMode = false;
+	
+	//Not lose Entered Data on refresh
+	function saveData() {
+        const data = { advPlayers, intPlayers, manualPlayers, pairs, matches, isManualMode };
+        localStorage.setItem('bpl_2026_data', JSON.stringify(data));
+    }
+
+    function loadData() {
+        const saved = localStorage.getItem('bpl_2026_data');
+        const lastStep = localStorage.getItem('bpl_last_step');
+        
+        if (saved) {
+            const data = JSON.parse(saved);
+            advPlayers = data.advPlayers || [];
+            intPlayers = data.intPlayers || [];
+            manualPlayers = data.manualPlayers || [];
+            pairs = data.pairs || [];
+            matches = data.matches || [];
+            isManualMode = data.isManualMode || false;
+            
+            renderLists();
+            renderManualList();
+            
+            if (matches.length > 0) {
+                renderMatches();
+                updateLiveTable();
+            }
+
+            if (lastStep && lastStep !== 'step-welcome') {
+                showStep(lastStep);
+                
+                // 1. Logic for Review/Courts back button
+                if (lastStep === 'step-review' || lastStep === 'step-courts') {
+                    const reviewBackBtn = document.getElementById('btn-review-back');
+                    if (isManualMode) {
+                        reviewBackBtn.onclick = () => showStep('step-manual');
+                        document.getElementById('btn-shuffle-strict').classList.add('hidden');
+                        document.getElementById('btn-shuffle-random').classList.add('hidden');
+                    } else {
+                        reviewBackBtn.onclick = () => showStep('step-int');
+                        document.getElementById('btn-shuffle-strict').classList.remove('hidden');
+                        document.getElementById('btn-shuffle-random').classList.remove('hidden');
+                    }
+                    renderReview(); // Make sure the team list is drawn
+                }
+
+                // 2. Logic for Group Stage Stats (Matrix/Recap)
+                if (lastStep === 'results-section') {
+                    calculateResults(); 
+                }
+
+                // 3. Logic for Final Leaderboard
+                if (lastStep === 'leaderboard-section') {
+                    calculateResults(); // Get the math ready
+                    showLeaderboard();  // Draw the standings
+                }
+            }
+        }
+    }
+	
+	
+	// Clears Saved Data
+	function clearTournament() {
+        if (confirm("Are you sure? This will delete all current players, matches, and scores.")) {
+            localStorage.removeItem('bpl_2026_data');
+            location.reload();
+        }
+    }
+    window.onload = loadData;
+
+    const st = document.getElementById('start-time');
+    for(let h=10; h<=18; h++) for(let m of ['00','30']) st.options.add(new Option(`${h}:${m}`, `${h}:${m}`));
+
+    function showStep(id) {
+		const step = document.getElementById(id);
+        if (!step) return;
+	
+        document.querySelectorAll('.container > div:not(.header-row)').forEach(d => d.classList.add('hidden')); 
+        document.getElementById(id).classList.remove('hidden'); 
+		
+		// Always save the current step to memory
+        localStorage.setItem('bpl_last_step', id);
+    }
+	
+	function goBackFromCourts() {
+        showStep('step-review');
+        // Re-apply the correct back-button logic for the Review screen
+        if (isManualMode) {
+            document.getElementById('btn-review-back').onclick = () => showStep('step-manual');
+            document.getElementById('btn-shuffle-strict').classList.add('hidden');
+            document.getElementById('btn-shuffle-random').classList.add('hidden');
+        } else {
+            document.getElementById('btn-review-back').onclick = () => showStep('step-int');
+            document.getElementById('btn-shuffle-strict').classList.remove('hidden');
+            document.getElementById('btn-shuffle-random').classList.remove('hidden');
+        }
+    }
+
+    // MANUAL LOGIC
+    function addManualPlayer() {
+        const inp = document.getElementById('name-manual');
+        const name = inp.value.trim();
+        if (!name) return;
+        if (manualPlayers.includes(name)) return alert("Duplicate name!");
+        manualPlayers.push(name);
+		saveData();
+        inp.value = '';
+        renderManualList();
+    }
+
+    function undoManual() { manualPlayers.pop(); renderManualList(); }
+
+    function renderManualList() {
+        const list = document.getElementById('list-manual');
+        let html = '';
+        for(let i=0; i<manualPlayers.length; i+=2) {
+            html += `<div style="margin-bottom:5px;">
+                <span class="player-tag">${manualPlayers[i]}</span> 
+                ${manualPlayers[i+1] ? `<span style="font-weight:bold;">-</span> <span class="player-tag">${manualPlayers[i+1]}</span>` : ''}
+            </div>`;
+        }
+        list.innerHTML = html;
+        
+        const err = document.getElementById('manual-error');
+        const btnNext = document.getElementById('btn-manual-next');
+        
+        if (manualPlayers.length > 0 && manualPlayers.length % 2 !== 0) {
+            err.innerText = "Please add one more player to complete the pair.";
+            btnNext.classList.add('hidden');
+        } else {
+            err.innerText = "";
+            btnNext.classList.toggle('hidden', manualPlayers.length < 2);
+        }
+    }
+
+    function proceedManual() {
+        isManualMode = true;
+        pairs = [];
+        for (let i = 0; i < manualPlayers.length; i += 2) {
+            pairs.push({ 
+                name: `${manualPlayers[i]} - ${manualPlayers[i+1]}`, 
+                played: 0, wins: 0, lost: 0, points: 0, score: 0, results: {} 
+            });
+        }
+        renderReview();
+		saveData();
+        showStep('step-review');
+        // Hide shuffle buttons for manual mode
+        document.getElementById('btn-shuffle-strict').classList.add('hidden');
+        document.getElementById('btn-shuffle-random').classList.add('hidden');
+        document.getElementById('btn-review-back').onclick = () => showStep('step-manual');
+		
+		saveData(); // <--- ADD THIS HERE to save the 'isManualMode = true' flag
+    }
+
+    // ORIGINAL PLAYER LOGIC
+    function addPlayer(lvl) {
+        const isCap = lvl === 'Captains';
+        const inp = document.getElementById(isCap ? 'name-adv' : 'name-int');
+        const name = inp.value.trim();
+        if (!name) return;
+        if (!isCap && intPlayers.length >= advPlayers.length) {
+            alert("Limit reached! You cannot add more Vice-Captains than Captains.");
+            return;
+        }
+        if (advPlayers.includes(name) || intPlayers.includes(name)) return alert("Duplicate name detected!");
+        isCap ? advPlayers.push(name) : intPlayers.push(name);
+		saveData();
+        inp.value = ''; 
+        renderLists();
+    }
+
+    function undo(lvl) { lvl === 'Captains' ? advPlayers.pop() : intPlayers.pop(); renderLists(); }
+
+    function renderLists() {
+        document.getElementById('list-adv').innerHTML = advPlayers.map(p => `<span class="player-tag">${p}</span>`).join('');
+        document.getElementById('list-int').innerHTML = intPlayers.map(p => `<span class="player-tag">${p}</span>`).join('');
+        document.getElementById('btn-to-int').classList.toggle('hidden', advPlayers.length < 2);
+        const diff = advPlayers.length - intPlayers.length;
+        const intInp = document.getElementById('name-int');
+        const intBtn = document.getElementById('add-int-btn');
+        if (diff > 0) {
+            document.getElementById('int-requirement').innerText = `Require ${diff} more Vice-Captains`;
+            intInp.disabled = false;
+            intBtn.style.display = 'inline-block';
+            document.getElementById('gen-btn').classList.add('hidden');
+        } else {
+            document.getElementById('int-requirement').innerText = advPlayers.length > 0 ? "Registration Complete" : "";
+            intInp.disabled = true;
+            intBtn.style.display = 'none';
+            document.getElementById('gen-btn').classList.toggle('hidden', advPlayers.length === 0);
+        }
+    }
+	
+	// UPDATED PREVIEW TEAMS LOGIC WITH MIXING MODES
+    function previewTeams(mode) {
+        isManualMode = false;
+        pairs = [];
+        if (mode === 'strict') {
+		// Logic: Group Vice-Captains to Captains
+            let sInt = [...intPlayers].sort(() => Math.random() - 0.5);
+            pairs = advPlayers.map((a, i) => ({ 
+                name: `${a} - ${sInt[i]}`, 
+                played: 0, wins: 0, lost: 0, points: 0, score: 0, results: {} 
+            }));
+        } else {
+            let allPlayers = [...advPlayers, ...intPlayers].sort(() => Math.random() - 0.5);
+            for (let i = 0; i < allPlayers.length; i += 2) {
+                if(allPlayers[i+1]) {
+                    pairs.push({ 
+                        name: `${allPlayers[i]} - ${allPlayers[i+1]}`, 
+                        played: 0, wins: 0, lost: 0, points: 0, score: 0, results: {} 
+                    });
+                }
+            }
+        }
+        renderReview();
+        document.getElementById('btn-shuffle-strict').classList.remove('hidden');
+        document.getElementById('btn-shuffle-random').classList.remove('hidden');
+        document.getElementById('btn-review-back').onclick = () => showStep('step-int');
+        showStep('step-review');
+		saveData();
+    }
+
+    function renderReview() {
+        document.getElementById('review-list').innerHTML = pairs.map((p, i) => `
+            <div class="review-card"><strong>Team ${i+1}:</strong> ${p.name}</div>
+        `).join('');
+    }
+
+    function generateSchedule() {
+        const courtLimit = parseInt(document.getElementById('court-count').value);
+        let [startH, startM] = document.getElementById('start-time').value.split(':').map(Number);
+        
+        // 1. Create the pool of all possible matchups
+        let pool = [];
+        for (let i = 0; i < pairs.length; i++) {
+            for (let j = i + 1; j < pairs.length; j++) {
+                pool.push({ tA: i, tB: j });
+            }
+        }
+        
+        // 2. Randomize initial order to avoid same patterns every tournament
+        pool.sort((a, b) => 0.5 - Math.random()); 
+        
+        matches = [];
+        let totalMin = startH * 60 + startM;
+        pairs.forEach(p => p.played = 0);
+
+        let roundCount = 1; 
+
+        // 3. Keep looping until all matches in the pool are assigned
+        while (pool.length > 0) {
+            let busy = new Set();
+            let usedCourts = 0;
+
+            // Sort pool so teams that have played the FEWEST matches get picked first for this round
+            pool.sort((a, b) => (pairs[a.tA].played + pairs[a.tB].played) - (pairs[b.tA].played + pairs[b.tB].played));
+
+            for (let i = 0; i < pool.length; i++) {
+                let m = pool[i];
+
+                // Check: Are both teams free this round AND is there a court available?
+                if (!busy.has(m.tA) && !busy.has(m.tB) && usedCourts < courtLimit) {
+                    m.time = `${Math.floor(totalMin/60).toString().padStart(2,'0')}:${(totalMin%60).toString().padStart(2,'0')}`;
+                    m.court = usedCourts + 1;
+                    m.round = roundCount; 
+                    m.sA = ''; m.sB = ''; m.done = false;
+
+                    // Move match from pool to the actual matches array
+                    matches.push(pool.splice(i, 1)[0]);
+
+                    // Mark teams as busy so they don't play twice in the same round
+                    busy.add(m.tA); 
+                    busy.add(m.tB);
+
+                    // Increment play count for sorting priority
+                    pairs[m.tA].played++; 
+                    pairs[m.tB].played++;
+
+                    usedCourts++; 
+                    i--; // Adjust index because we removed an item from pool
+                }
+            }
+
+            // 4. Move time forward 20 mins for the next set of matches (next round)
+            totalMin += 20; 
+            roundCount++;
+
+            // Safety check to prevent infinite loops
+            if (roundCount > 500) break;
+        }
+
+        saveData(); 
+        showStep('tournament-section');
+        renderMatches();
+        updateLiveTable();
+    }
+	
+	function renderMatches() {
+        document.getElementById('matches-container').innerHTML = matches.map((m, i) => `
+            <div class="match-card" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 10px; gap: 8px;">
+                
+                <div style="min-width: 75px; text-align: left; white-space: nowrap;">
+                    <span style="font-size: 0.8rem; font-weight: 800; color: #7c3aed; text-transform: uppercase;">Round ${m.round}</span>
+                </div>
+
+                <div style="flex: 1; display: flex; align-items: center; justify-content: center; border-left: 1px solid #eee; border-right: 1px solid #eee; padding: 0 10px;">
+                    
+                    <span style="flex: 1; text-align: right; font-weight: bold; color: #1e3a8a; font-size: 0.85rem; padding-right: 10px; line-height: 1.2;">
+                        ${pairs[m.tA].name}
+                    </span>
+
+                    <div style="display: flex; align-items: center; gap: 5px; position: relative;">
+                        <input type="number" id="m-${i}-a" value="${m.sA || ''}" class="score-input ${m.done ? 'valid' : ''}" oninput="upd(${i}, 'a')" placeholder="0" style="width:42px; text-align:center; padding: 5px; font-size: 0.95rem;">
+                        <span style="font-weight: bold; color: #9ca3af; font-size: 0.8rem;">-</span>
+                        <input type="number" id="m-${i}-b" value="${m.sB || ''}" class="score-input ${m.done ? 'valid' : ''}" oninput="upd(${i}, 'b')" placeholder="0" style="width:42px; text-align:center; padding: 5px; font-size: 0.95rem;">
+                        
+                        <div id="hint-${i}" class="error-hint" style="position: absolute; font-size: 9px; bottom: -18px; width: 150px; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none;"></div>
+                    </div>
+
+                    <span style="flex: 1; text-align: left; font-weight: bold; color: #1e3a8a; font-size: 0.85rem; padding-left: 10px; line-height: 1.2;">
+                        ${pairs[m.tB].name}
+                    </span>
+                </div>
+
+                <div style="min-width: 75px; text-align: right; white-space: nowrap; display: flex; flex-direction: column; gap: 2px;">
+                    <span style="font-size: 0.8rem; font-weight: 800; color: #374151; text-transform: uppercase;">Court ${m.court}</span>
+                    <span style="font-size: 0.75rem; font-weight: 600; color: #6b7280;">${m.time}</span>
+                </div>
+
+            </div>`).join('');
+    }
+	
+    function upd(i, side) {
+        const inpA = document.getElementById(`m-${i}-a`);
+        const inpB = document.getElementById(`m-${i}-b`);
+        const hint = document.getElementById(`hint-${i}`);
+        const valA = parseInt(inpA.value);
+        const valB = parseInt(inpB.value);
+        matches[i].sA = inpA.value;
+        matches[i].sB = inpB.value;
+        const hasScore = !isNaN(valA) && !isNaN(valB);
+        let isValidMatch = false;
+        let errorMsg = "";
+
+        if (hasScore) {
+            const high = Math.max(valA, valB);
+            const low = Math.min(valA, valB);
+            const diff = high - low;
+            if (high < 21) errorMsg = "Winner must reach 21";
+            else if (high === 21) {
+                if (low <= 19) isValidMatch = true; 
+                else errorMsg = "Must lead by 2 (e.g., 22-20)";
+            } else if (high > 21 && high < 30) {
+                if (diff === 2) isValidMatch = true; 
+                else if (low <= 19) errorMsg = "Game finishes at 21"; 
+                else errorMsg = "Deuce! Must lead by 2";
+            } else if (high === 30) {
+                isValidMatch = true;
+            } else if (high > 30) errorMsg = "Maximum score is 30";
+        }
+
+        matches[i].done = isValidMatch;
+        hint.innerText = isValidMatch ? "" : errorMsg;
+        if (hasScore) {
+            inpA.classList.toggle('valid', isValidMatch); inpA.classList.toggle('invalid', !isValidMatch);
+            inpB.classList.toggle('valid', isValidMatch); inpB.classList.toggle('invalid', !isValidMatch);
+        }
+        
+        const currentInput = document.getElementById(`m-${i}-${side}`);
+        if (currentInput.value.length >= 2 || parseInt(currentInput.value) > 9) {
+            if (side === 'a') { inpB.focus(); } 
+            else if (matches[i+1]) { document.getElementById(`m-${i+1}-a`).focus(); }
+        }
+        let pct = Math.round((matches.filter(m => m.done).length / matches.length) * 100);
+        document.getElementById('p-bar').style.width = pct + '%';
+        document.getElementById('p-text').innerText = `Progress: ${pct}%`;
+        updateLiveTable(); 
+		saveData();
+    }
+
+    function updateLiveTable() {
+        let liveStats = pairs.map(p => ({ name: p.name, played: 0, wins: 0, lost: 0, points: 0, score: 0 }));
+        matches.forEach(m => {
+            if (!m.done) return;
+            let a = parseInt(m.sA), b = parseInt(m.sB);
+            liveStats[m.tA].played++; liveStats[m.tB].played++;
+            liveStats[m.tA].score += a; liveStats[m.tB].score += b;
+            if (a > b) { liveStats[m.tA].wins++; liveStats[m.tA].points += 2; liveStats[m.tB].lost++; }
+            else { liveStats[m.tB].wins++; liveStats[m.tB].points += 2; liveStats[m.tA].lost++; }
+        });
+        liveStats.sort((a, b) => b.points - a.points || b.score - a.score);
+        document.getElementById('live-body').innerHTML = liveStats.map(p => 
+            `<tr><td>${p.name}</td><td>${p.played}</td><td>${p.wins}</td><td>${p.lost}</td><td>${p.points}</td><td>${p.score}</td></tr>`
+        ).join('');
+    }
+
+    function calculateResults() {
+        if (matches.some(m => !m.done && (m.sA || m.sB))) {
+             if (!confirm("Some scores are invalid. Finish anyway?")) return;
+        }
+        pairs.forEach(p => { p.played=0; p.wins=0; p.lost=0; p.points=0; p.score=0; p.results={}; });
+        matches.forEach(m => {
+            if(m.sA === '' || m.sB === '') return;
+            let a = parseInt(m.sA), b = parseInt(m.sB);
+            pairs[m.tA].played++; pairs[m.tB].played++;
+            pairs[m.tA].score += a; pairs[m.tB].score += b;
+            pairs[m.tA].results[m.tB] = `${a}-${b}`; pairs[m.tB].results[m.tA] = `${b}-${a}`;
+            if(a > b) { pairs[m.tA].wins++; pairs[m.tA].points+=2; pairs[m.tB].lost++; }
+            else { pairs[m.tB].wins++; pairs[m.tB].points+=2; pairs[m.tA].lost++; }
+        });
+        let mx = `<tr><th>Teams</th>` + pairs.map(p => `<th>${p.name}</th>`).join('') + `</tr>`;
+        pairs.forEach((r, i) => {
+            mx += `<tr><td><strong>${r.name}</strong></td>`;
+            pairs.forEach((_, j) => mx += (i===j) ? `<td class="self-cell">X</td>` : `<td>${r.results[j] || '—'}</td>`);
+            mx += `</tr>`;
+        });
+        document.getElementById('matrix-table').innerHTML = mx;
+        document.getElementById('recap-table').innerHTML = `<thead><tr><th>Time</th><th>Court</th><th>Match</th><th>Score</th></tr></thead>` + 
+            matches.map(m => `<tr><td>${m.time}</td><td>${m.court}</td><td>${pairs[m.tA].name} vs ${pairs[m.tB].name}</td><td>${m.sA}-${m.sB}</td></tr>`).join('');
+        showStep('results-section');
+    }
+
+    function showLeaderboard() {
+        let sorted = [...pairs].sort((a,b) => b.points - a.points || b.score - a.score);
+        document.getElementById('table-body').innerHTML = sorted.map((p, i) => `<tr><td>${i+1}</td><td>${p.name}</td><td>${p.played}</td><td>${p.wins}</td><td>${p.lost}</td><td>${p.points}</td><td>${p.score}</td></tr>`).join('');
+        let playoffHtml = (pairs.length >= 4) ? 
+            `<h3>🏆 Semifinals</h3><p><strong>Semi 1:</strong> ${sorted[0].name} vs ${sorted[3].name}</p><p><strong>Semi 2:</strong> ${sorted[1].name} vs ${sorted[2].name}</p>` : 
+            `<h3>🏆 Grand Final</h3><p>${sorted[0].name} vs ${sorted[1].name}</p>`;
+        document.getElementById('playoff-container').innerHTML = playoffHtml;
+        showStep('leaderboard-section');
+    }
+
+    async function exportImage(divId, filename) {
+        const element = document.getElementById(divId);
+        const canvas = await html2canvas(element);
+        const data = canvas.toDataURL("image/png");
+        const link = document.createElement('a');
+        link.href = data;
+        link.download = `${filename}.png`;
+        link.click();
+    }
+
+    function exportPDF(divId, filename) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'pt', 'a4');
+        doc.html(document.getElementById(divId), {
+            callback: function (doc) { doc.save(`${filename}.pdf`); },
+            x: 15, y: 15, width: 560, windowWidth: 1000
+        });
+    }
+
+    function shareEmail(divId) {
+        const email = prompt("Enter email address to send results to:");
+        if (email) alert("Preparing attachment... (EmailJS template required to complete send)");
+    }
+</script>
+</body>
+</html>
