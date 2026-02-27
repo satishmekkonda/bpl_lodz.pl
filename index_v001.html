@@ -161,9 +161,7 @@
             </div>
         </div>
         <div id="list-adv" class="left-align"></div>
-        <div style="text-align: center; margin-top: 25px;">
-		<button class="back" onclick="showStep('step-manual')">← Back</button>
-		<button id="btn-to-int" class="hidden" onclick="showStep('step-int')">Next</button></div>
+        <div style="text-align: center; margin-top: 25px;"><button id="btn-to-int" class="hidden" onclick="showStep('step-int')">Next</button></div>
     </div>
 
     <div id="step-int" class="hidden">
@@ -180,12 +178,13 @@
         <div id="list-int" class="left-align"></div>
         <div style="text-align: center; margin-top: 25px;">
             <button class="back" onclick="showStep('step-adv')">← Back</button>
-            <button id="gen-btn" class="hidden" onclick="previewTeams('strict')">Next</button></div>
+            <button id="gen-btn" class="hidden" onclick="previewTeams('strict')">Next</button>
+        </div>
     </div>
 
     <div id="step-review" class="hidden">
         <h2 class="left-align">Review Generated Teams</h2>
-		<p style="font-size: 0.9em; color: #64748b;">Use Shuffle to change partner's (NA for Manual Registrations</p>
+		<p style="font-size: 0.9em; color: #64748b;">Use Shuffle to change partner's</p>
         <div id="review-list"></div>
         
         <div id="review-controls" style="margin-top: 25px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
@@ -215,14 +214,13 @@
                 <select id="start-time"></select>
             </div>
             <div style="text-align: center; margin-top: 25px;">
-				<button class="back" onclick="goBackFromCourts()">← Back</button>
+                <button class="back" onclick="showStep('step-review')">← Back</button>
                 <button class="finish" style="width: auto; padding: 12px 30px;" onclick="generateSchedule()">Generate Schedule</button>
             </div>
         </div>
     </div>
 
     <div id="tournament-section" class="hidden">
-		<h3 style="margin-top:0; color:#1e3a8a;">Full Schedule</h3>
         <div class="progress-container">
             <div id="p-bar" class="progress-bar"></div>
             <div id="p-text" class="progress-text">Progress: 0%</div>
@@ -274,7 +272,7 @@
         </div>
         <div style="text-align: center; margin-top: 20px;">
             <button class="back" onclick="showStep('results-section')">← Back</button>
-			<button onclick="clearTournament()" style="background:#dc2626; color:white; padding:12px; border-radius:8px; border:none; font-weight:bold; margin-left:10px;">New Tournament</button>
+            <button onclick="location.reload()" style="background:#dc2626; color:white; padding:12px; border-radius:8px; border:none; font-weight:bold; margin-left:10px;">New Tournament</button>
         </div>
     </div>
 </div>
@@ -286,102 +284,13 @@
     
     let advPlayers = [], intPlayers = [], manualPlayers = [], pairs = [], matches = [];
     let isManualMode = false;
-	
-	//Not lose Entered Data on refresh
-	function saveData() {
-        const data = { advPlayers, intPlayers, manualPlayers, pairs, matches, isManualMode };
-        localStorage.setItem('bpl_2026_data', JSON.stringify(data));
-    }
-
-    function loadData() {
-        const saved = localStorage.getItem('bpl_2026_data');
-        const lastStep = localStorage.getItem('bpl_last_step');
-        
-        if (saved) {
-            const data = JSON.parse(saved);
-            advPlayers = data.advPlayers || [];
-            intPlayers = data.intPlayers || [];
-            manualPlayers = data.manualPlayers || [];
-            pairs = data.pairs || [];
-            matches = data.matches || [];
-            isManualMode = data.isManualMode || false;
-            
-            renderLists();
-            renderManualList();
-            
-            if (matches.length > 0) {
-                renderMatches();
-                updateLiveTable();
-            }
-
-            if (lastStep && lastStep !== 'step-welcome') {
-                showStep(lastStep);
-                
-                // 1. Logic for Review/Courts back button
-                if (lastStep === 'step-review' || lastStep === 'step-courts') {
-                    const reviewBackBtn = document.getElementById('btn-review-back');
-                    if (isManualMode) {
-                        reviewBackBtn.onclick = () => showStep('step-manual');
-                        document.getElementById('btn-shuffle-strict').classList.add('hidden');
-                        document.getElementById('btn-shuffle-random').classList.add('hidden');
-                    } else {
-                        reviewBackBtn.onclick = () => showStep('step-int');
-                        document.getElementById('btn-shuffle-strict').classList.remove('hidden');
-                        document.getElementById('btn-shuffle-random').classList.remove('hidden');
-                    }
-                    renderReview(); // Make sure the team list is drawn
-                }
-
-                // 2. Logic for Group Stage Stats (Matrix/Recap)
-                if (lastStep === 'results-section') {
-                    calculateResults(); 
-                }
-
-                // 3. Logic for Final Leaderboard
-                if (lastStep === 'leaderboard-section') {
-                    calculateResults(); // Get the math ready
-                    showLeaderboard();  // Draw the standings
-                }
-            }
-        }
-    }
-	
-	
-	// Clears Saved Data
-	function clearTournament() {
-        if (confirm("Are you sure? This will delete all current players, matches, and scores.")) {
-            localStorage.removeItem('bpl_2026_data');
-            location.reload();
-        }
-    }
-    window.onload = loadData;
 
     const st = document.getElementById('start-time');
-    for(let h=10; h<=18; h++) for(let m of ['00','30']) st.options.add(new Option(`${h}:${m}`, `${h}:${m}`));
+    for(let h=8; h<=22; h++) for(let m of ['00','30']) st.options.add(new Option(`${h}:${m}`, `${h}:${m}`));
 
-    function showStep(id) {
-		const step = document.getElementById(id);
-        if (!step) return;
-	
+    function showStep(id) { 
         document.querySelectorAll('.container > div:not(.header-row)').forEach(d => d.classList.add('hidden')); 
         document.getElementById(id).classList.remove('hidden'); 
-		
-		// Always save the current step to memory
-        localStorage.setItem('bpl_last_step', id);
-    }
-	
-	function goBackFromCourts() {
-        showStep('step-review');
-        // Re-apply the correct back-button logic for the Review screen
-        if (isManualMode) {
-            document.getElementById('btn-review-back').onclick = () => showStep('step-manual');
-            document.getElementById('btn-shuffle-strict').classList.add('hidden');
-            document.getElementById('btn-shuffle-random').classList.add('hidden');
-        } else {
-            document.getElementById('btn-review-back').onclick = () => showStep('step-int');
-            document.getElementById('btn-shuffle-strict').classList.remove('hidden');
-            document.getElementById('btn-shuffle-random').classList.remove('hidden');
-        }
     }
 
     // MANUAL LOGIC
@@ -391,7 +300,6 @@
         if (!name) return;
         if (manualPlayers.includes(name)) return alert("Duplicate name!");
         manualPlayers.push(name);
-		saveData();
         inp.value = '';
         renderManualList();
     }
@@ -404,7 +312,7 @@
         for(let i=0; i<manualPlayers.length; i+=2) {
             html += `<div style="margin-bottom:5px;">
                 <span class="player-tag">${manualPlayers[i]}</span> 
-                ${manualPlayers[i+1] ? `<span style="font-weight:bold;">-</span> <span class="player-tag">${manualPlayers[i+1]}</span>` : ''}
+                ${manualPlayers[i+1] ? `<span style="font-weight:bold;">&</span> <span class="player-tag">${manualPlayers[i+1]}</span>` : ''}
             </div>`;
         }
         list.innerHTML = html;
@@ -431,14 +339,11 @@
             });
         }
         renderReview();
-		saveData();
         showStep('step-review');
         // Hide shuffle buttons for manual mode
         document.getElementById('btn-shuffle-strict').classList.add('hidden');
         document.getElementById('btn-shuffle-random').classList.add('hidden');
         document.getElementById('btn-review-back').onclick = () => showStep('step-manual');
-		
-		saveData(); // <--- ADD THIS HERE to save the 'isManualMode = true' flag
     }
 
     // ORIGINAL PLAYER LOGIC
@@ -453,7 +358,6 @@
         }
         if (advPlayers.includes(name) || intPlayers.includes(name)) return alert("Duplicate name detected!");
         isCap ? advPlayers.push(name) : intPlayers.push(name);
-		saveData();
         inp.value = ''; 
         renderLists();
     }
@@ -507,7 +411,6 @@
         document.getElementById('btn-shuffle-random').classList.remove('hidden');
         document.getElementById('btn-review-back').onclick = () => showStep('step-int');
         showStep('step-review');
-		saveData();
     }
 
     function renderReview() {
@@ -519,107 +422,51 @@
     function generateSchedule() {
         const courtLimit = parseInt(document.getElementById('court-count').value);
         let [startH, startM] = document.getElementById('start-time').value.split(':').map(Number);
-        
-        // 1. Create the pool of all possible matchups
         let pool = [];
-        for (let i = 0; i < pairs.length; i++) {
-            for (let j = i + 1; j < pairs.length; j++) {
-                pool.push({ tA: i, tB: j });
-            }
-        }
-        
-        // 2. Randomize initial order to avoid same patterns every tournament
+        for (let i = 0; i < pairs.length; i++) for (let j = i + 1; j < pairs.length; j++) pool.push({ tA: i, tB: j });
         pool.sort((a, b) => 0.5 - Math.random()); 
-        
         matches = [];
         let totalMin = startH * 60 + startM;
         pairs.forEach(p => p.played = 0);
 
-        let roundCount = 1; 
-
-        // 3. Keep looping until all matches in the pool are assigned
         while (pool.length > 0) {
-            let busy = new Set();
-            let usedCourts = 0;
-
-            // Sort pool so teams that have played the FEWEST matches get picked first for this round
-            pool.sort((a, b) => (pairs[a.tA].played + pairs[a.tB].played) - (pairs[b.tA].played + pairs[b.tB].played));
-
+            let busy = new Set(), used = 0;
+            pool.sort((a,b) => (pairs[a.tA].played + pairs[a.tB].played) - (pairs[b.tA].played + pairs[b.tB].played));
             for (let i = 0; i < pool.length; i++) {
                 let m = pool[i];
-
-                // Check: Are both teams free this round AND is there a court available?
-                if (!busy.has(m.tA) && !busy.has(m.tB) && usedCourts < courtLimit) {
+                if (!busy.has(m.tA) && !busy.has(m.tB) && used < courtLimit) {
                     m.time = `${Math.floor(totalMin/60).toString().padStart(2,'0')}:${(totalMin%60).toString().padStart(2,'0')}`;
-                    m.court = usedCourts + 1;
-                    m.round = roundCount; 
+                    m.court = used + 1;
                     m.sA = ''; m.sB = ''; m.done = false;
-
-                    // Move match from pool to the actual matches array
                     matches.push(pool.splice(i, 1)[0]);
-
-                    // Mark teams as busy so they don't play twice in the same round
-                    busy.add(m.tA); 
-                    busy.add(m.tB);
-
-                    // Increment play count for sorting priority
-                    pairs[m.tA].played++; 
-                    pairs[m.tB].played++;
-
-                    usedCourts++; 
-                    i--; // Adjust index because we removed an item from pool
+                    busy.add(m.tA); busy.add(m.tB);
+                    pairs[m.tA].played++; pairs[m.tB].played++;
+                    used++; i--;
                 }
             }
-
-            // 4. Move time forward 20 mins for the next set of matches (next round)
             totalMin += 20; 
-            roundCount++;
-
-            // Safety check to prevent infinite loops
-            if (roundCount > 500) break;
         }
-
-        saveData(); 
         showStep('tournament-section');
         renderMatches();
         updateLiveTable();
     }
-	
-	function renderMatches() {
+
+    function renderMatches() {
         document.getElementById('matches-container').innerHTML = matches.map((m, i) => `
-            <div class="match-card" style="display: flex; align-items: center; justify-content: space-between; padding: 12px 10px; gap: 8px;">
-                
-                <div style="min-width: 75px; text-align: left; white-space: nowrap;">
-                    <span style="font-size: 0.8rem; font-weight: 800; color: #7c3aed; text-transform: uppercase;">Round ${m.round}</span>
-                </div>
-
-                <div style="flex: 1; display: flex; align-items: center; justify-content: center; border-left: 1px solid #eee; border-right: 1px solid #eee; padding: 0 10px;">
-                    
-                    <span style="flex: 1; text-align: right; font-weight: bold; color: #1e3a8a; font-size: 0.85rem; padding-right: 10px; line-height: 1.2;">
-                        ${pairs[m.tA].name}
-                    </span>
-
-                    <div style="display: flex; align-items: center; gap: 5px; position: relative;">
-                        <input type="number" id="m-${i}-a" value="${m.sA || ''}" class="score-input ${m.done ? 'valid' : ''}" oninput="upd(${i}, 'a')" placeholder="0" style="width:42px; text-align:center; padding: 5px; font-size: 0.95rem;">
-                        <span style="font-weight: bold; color: #9ca3af; font-size: 0.8rem;">-</span>
-                        <input type="number" id="m-${i}-b" value="${m.sB || ''}" class="score-input ${m.done ? 'valid' : ''}" oninput="upd(${i}, 'b')" placeholder="0" style="width:42px; text-align:center; padding: 5px; font-size: 0.95rem;">
-                        
-                        <div id="hint-${i}" class="error-hint" style="position: absolute; font-size: 9px; bottom: -18px; width: 150px; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none;"></div>
+            <div class="match-card">
+                <div><span class="time-label">${m.time}</span><span class="court-label">COURT ${m.court}</span></div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                    <span style="flex:1;text-align:right;font-weight:bold;">${pairs[m.tA].name}</span>
+                    <div style="margin:0 15px">
+                        <input type="number" id="m-${i}-a" class="score-input" oninput="upd(${i}, 'a')" placeholder="0" style="width:55px; text-align:center;"> - 
+                        <input type="number" id="m-${i}-b" class="score-input" oninput="upd(${i}, 'b')" placeholder="0" style="width:55px; text-align:center;">
                     </div>
-
-                    <span style="flex: 1; text-align: left; font-weight: bold; color: #1e3a8a; font-size: 0.85rem; padding-left: 10px; line-height: 1.2;">
-                        ${pairs[m.tB].name}
-                    </span>
+                    <span style="flex:1;text-align:left;font-weight:bold;">${pairs[m.tB].name}</span>
                 </div>
-
-                <div style="min-width: 75px; text-align: right; white-space: nowrap; display: flex; flex-direction: column; gap: 2px;">
-                    <span style="font-size: 0.8rem; font-weight: 800; color: #374151; text-transform: uppercase;">Court ${m.court}</span>
-                    <span style="font-size: 0.75rem; font-weight: 600; color: #6b7280;">${m.time}</span>
-                </div>
-
+                <div id="hint-${i}" class="error-hint"></div>
             </div>`).join('');
     }
-	
+
     function upd(i, side) {
         const inpA = document.getElementById(`m-${i}-a`);
         const inpB = document.getElementById(`m-${i}-b`);
@@ -665,7 +512,6 @@
         document.getElementById('p-bar').style.width = pct + '%';
         document.getElementById('p-text').innerText = `Progress: ${pct}%`;
         updateLiveTable(); 
-		saveData();
     }
 
     function updateLiveTable() {
