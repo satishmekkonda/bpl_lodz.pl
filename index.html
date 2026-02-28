@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BPL 2026 | Łódź</title>    
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="container">
+    <div class="header-row">
+        <div style="min-width:100px;"></div>
+        <h1>BPL 2026 | Łódź</h1>
+        <div id="date-display" class="today-date"></div>
+    </div>
+
+    <div id="step-welcome" class="welcome-screen">
+        <div class="welcome-logo">🏸</div>
+        <h2>Badminton Premier League, Łódź 2026</h2>
+        <p>Welcome - Namasthey - Dzień dobry</p>
+        <div style="margin-top: 20px;">
+            <button class="btn-get-started" onclick="showStep('step-manual')">Let's Smash</button>
+        </div>
+    </div>
+
+    <div id="step-manual" class="hidden">
+        <h2 class="left-align">Manual Team Pairing</h2>
+        <p style="font-size: 0.9em; color: #64748b;">Enter names in pairs (e.g., enter X, then Y to form Team 1).</p>
+        <div class="center-controls">
+            <div id="manual-error" style="font-weight:bold; color:#e11d48; margin-bottom:10px;"></div>
+            <div class="input-group">
+                <input type="text" id="name-manual" placeholder="Player Name..." onkeypress="if(event.key==='Enter') addManualPlayer()">
+                <button onclick="addManualPlayer()">Add Player</button>
+                <button class="undo" onclick="undoManual()">Undo</button>
+            </div>
+        </div>
+        <div id="list-manual" class="left-align"></div>
+        <div style="text-align: center; margin-top: 25px;">
+            <button class="back" style="background:#64748b;" onclick="showStep('step-adv')">Skip Manual Pairing</button>
+            <button id="btn-manual-next" class="hidden" onclick="proceedManual()">Next</button>
+            <button class="back" onclick="showStep('step-welcome')">← Back</button>
+        </div>
+    </div>
+
+    <div id="step-adv" class="hidden">
+        <h2 class="left-align">Player Registration: Captains</h2>
+		<p style="font-size: 0.9em; color: #64748b;">Enter Captain Names for each team, who will be player 1.</p>
+        <div class="center-controls">
+            <div class="input-group">
+                <input type="text" id="name-adv" placeholder="Name..." onkeypress="if(event.key==='Enter') addPlayer('Captains')">
+                <button onclick="addPlayer('Captains')">Add Player</button>
+                <button class="undo" onclick="undo('Captains')">Undo</button>
+            </div>
+        </div>
+        <div id="list-adv" class="left-align"></div>
+        <div style="text-align: center; margin-top: 25px;">
+		<button class="back" onclick="showStep('step-manual')">← Back</button>
+		<button id="btn-to-int" class="hidden" onclick="showStep('step-int')">Next</button></div>
+    </div>
+
+    <div id="step-int" class="hidden">
+        <h2 class="left-align">Player Registration: Vice-Captains</h2>
+		<p style="font-size: 0.9em; color: #64748b;">Vice-Captains will be assigned randomly to each Captain, forming a double's pair.</p>
+        <div class="center-controls">
+            <div id="int-requirement" style="font-weight:bold; color:#e11d48; margin-bottom:15px;"></div>
+            <div class="input-group">
+                <input type="text" id="name-int" placeholder="Name..." onkeypress="if(event.key==='Enter') addPlayer('Vice-Captains')">
+                <button id="add-int-btn" onclick="addPlayer('Vice-Captains')">Add Player</button>
+                <button class="undo" onclick="undo('Vice-Captains')">Undo</button>
+            </div>
+        </div>
+        <div id="list-int" class="left-align"></div>
+        <div style="text-align: center; margin-top: 25px;">
+            <button class="back" onclick="showStep('step-adv')">← Back</button>
+            <button id="gen-btn" class="hidden" onclick="previewTeams('strict')">Next</button></div>
+    </div>
+
+    <div id="step-review" class="hidden">
+        <h2 class="left-align">Review Generated Teams</h2>
+		<p style="font-size: 0.9em; color: #64748b;">Use Shuffle to change partner's (NA for Manual Registrations)</p>
+        <div id="review-list"></div>
+        
+        <div id="review-controls" style="margin-top: 25px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
+            <button class="undo" id="btn-shuffle-strict" style="margin: 0;" onclick="previewTeams('strict')">Shuffle VC</button>
+            <button style="background-color: #7c3aed; margin: 0;" id="btn-shuffle-random" onclick="previewTeams('random')">Shuffle C&VC</button>
+            <button class="finish" style="margin: 0; width: 100%;" onclick="showStep('step-courts')">Confirm Teams</button>
+        </div>
+        
+        <div style="text-align: center; margin-top: 15px;">
+            <button id="btn-review-back" class="back" onclick="showStep('step-int')">← Edit Players</button>
+        </div>
+    </div>
+
+    <div id="step-courts" class="hidden">
+        <h2 class="left-align">Fix Group Stage Matches</h2>
+        <div class="center-controls">
+            <div class="input-group">
+                <label>Available Courts:</label>
+                <select id="court-count" style="width: 80px;">
+                    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                    <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+                    <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Start Time:</label>
+                <select id="start-time"></select>
+            </div>
+            <div style="text-align: center; margin-top: 25px;">
+				<button class="back" onclick="goBackFromCourts()">← Back</button>
+                <button class="finish" style="width: auto; padding: 12px 30px;" onclick="generateSchedule()">Generate Schedule</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tournament-section" class="hidden">
+		<h3 style="margin-top:0; color:#1e3a8a;">Full Schedule</h3>
+        <div class="progress-container">
+            <div id="p-bar" class="progress-bar"></div>
+            <div id="p-text" class="progress-text">Progress: 0%</div>
+        </div>
+        <div id="matches-container"></div>
+        <div class="live-standings-box">
+            <h3 style="margin-top:0; color:#1e3a8a;">📊 Live Standings</h3>
+            <div class="table-responsive">
+            <table style="font-size: 0.85em;">
+                <thead><tr><th>Team</th><th>P</th><th>W</th><th>L</th><th>Pts</th><th>Score</th></tr></thead>
+                <tbody id="live-body"></tbody>
+            </table>
+        </div>
+        </div>
+        <div style="text-align: center; margin-top:20px;"><button class="back" onclick="showStep('step-courts')">← Back</button></div>
+        <button id="calc-results-btn" class="finish" onclick="calculateResults()">Finish Group Stage</button>
+    </div>
+
+    <div id="results-section" class="hidden">
+        <div id="capture-results" style="padding: 10px; background: white;">
+            <h2 style="text-align: center;">Group Stage Stats</h2>
+            <h3>Score Matrix</h3>
+            <div class="table-responsive"><table id="matrix-table"></table></div>
+            <h3>Schedule Recap</h3>
+            <div class="table-responsive"><table id="recap-table"></table></div>
+        </div>
+        <div class="share-row">
+            <button class="btn-share btn-pdf" onclick="exportPDF('capture-results', 'BPL_Results')">Save PDF</button>
+            <button class="btn-share btn-img" onclick="exportImage('capture-results', 'BPL_Results')">Save Image</button>
+            <button class="btn-share btn-email" onclick="shareEmail('capture-results')">Email</button>
+        </div>
+        <div style="text-align: center;">
+            <button class="back" onclick="showStep('tournament-section')">← Back</button>
+            <button class="finish" style="width: auto; padding: 12px 30px; margin-left:10px;" onclick="showLeaderboard()">View Leaderboard & Playoffs →</button>
+        </div>
+    </div>
+
+    <div id="leaderboard-section" class="hidden">
+        <div id="capture-leaderboard" style="padding: 10px; background: white;">
+            <h2 style="text-align: center;">Final Standings</h2>
+            <div class="table-responsive">
+            <table id="points-table">
+                <thead><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>L</th><th>Pts</th><th>Score</th></tr></thead>
+                <tbody id="table-body"></tbody>
+            </table>
+            </div>
+            <div id="playoff-container" class="playoff-box" style="background: #eff6ff; border: 2px dashed #2563eb; padding: 20px; border-radius: 12px; margin: 20px 0; text-align: center;"></div>
+        </div>
+        <div class="share-row">
+            <button class="btn-share btn-pdf" onclick="exportPDF('capture-leaderboard', 'BPL_Leaderboard')">Save PDF</button>
+            <button class="btn-share btn-img" onclick="exportImage('capture-leaderboard', 'BPL_Leaderboard')">Save Image</button>
+            <button class="btn-share btn-email" onclick="shareEmail('capture-leaderboard')">Email</button>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="back" onclick="showStep('results-section')">← Back</button>
+			<button onclick="clearTournament()" style="background:#dc2626; color:white; padding:12px; border-radius:8px; border:none; font-weight:bold; margin-left:10px;">New Tournament</button>
+        </div>
+    </div>
+</div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
+    <script src="js/app.js"></script>
+    <script src="js/players.js"></script>
+    <script src="js/tournament.js"></script>
+    <script src="js/export.js"></script>
+
+</body>
+</html>
