@@ -1,0 +1,328 @@
+/* ====== Base Styles & Layout ====== */
+body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    background-color: #f4f7f6; 
+    padding: 20px; 
+    color: #1a1a1b; 
+}
+
+.container { 
+    max-width: 1000px; 
+    margin: auto; 
+    background: white; 
+    padding: 30px; 
+    border-radius: 12px; 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08); 
+}
+
+.header-row { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: baseline; 
+    border-bottom: 3px solid #2563eb; 
+    margin-bottom: 30px; 
+    padding-bottom: 10px; 
+}
+
+h1 { 
+    color: #1e3a8a; 
+    font-size: 2.2em; 
+    margin: 0; 
+    flex-grow: 1; 
+    text-align: center; 
+}
+
+.today-date { 
+    font-size: 0.9em; 
+    color: #64748b; 
+    font-weight: bold; 
+    min-width: 100px; 
+    text-align: right; 
+}
+
+h2 { 
+    color: #1e3a8a; 
+    font-size: 1.3em; 
+    margin-top: 0; 
+}
+
+.hidden { display: none; }
+        
+/* ====== Welcome Screen Enhancements ====== */
+.welcome-screen { 
+    text-align: center; 
+    padding: 80px 40px; 
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    border-radius: 12px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.welcome-screen::before {
+    content: "🏸";
+    position: absolute;
+    font-size: 15rem;
+    opacity: 0.1;
+    right: -50px;
+    bottom: -50px;
+    transform: rotate(-20deg);
+}
+
+.welcome-logo {
+    width: 120px;
+    height: 120px;
+    background: white;
+    border-radius: 50%;
+    margin: 0 auto 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3.5rem;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.welcome-screen h2 { 
+    font-size: 2.8em; 
+    color: white; 
+    margin-bottom: 15px; 
+    font-weight: 800; 
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3); 
+}
+
+.welcome-screen p { 
+    font-size: 1.2em; 
+    margin-bottom: 35px; 
+    opacity: 0.9; 
+}
+
+.btn-get-started { 
+    background-color: #ffffff; 
+    color: #1e3a8a; 
+    padding: 18px 50px; 
+    font-size: 1.3em; 
+    border-radius: 50px; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+    position: relative; 
+    z-index: 10; 
+    cursor: pointer; 
+}
+
+.btn-get-started:hover { 
+    background-color: #f8fafc; 
+    color: #2563eb; 
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25); 
+}
+
+/* ====== Forms & Buttons ====== */
+
+.left-align { text-align: left; width: 100%; }
+.center-controls { display: flex; flex-direction: column; align-items: center; margin: 20px 0; }
+.input-group { display: flex; gap: 10px; justify-content: center; width: 100%; margin-bottom: 10px; }
+
+input, button, select { padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; outline: none; }
+input:disabled { background-color: #f1f5f9; cursor: not-allowed; }
+button { 
+    cursor: pointer; 
+    background-color: #2563eb; 
+    color: white; 
+    border: none; 
+    font-weight: bold; 
+    transition: all 0.2s; 
+    padding: 12px;
+    border-radius: 8px;
+}
+button:hover { background-color: #1d4ed8; transform: translateY(-1px); }
+button.undo { background-color: #f59e0b; }
+button.back { background-color: #64748b; margin-top: 10px; }
+button.finish { background-color: #059669; width: 100%; margin-top: 20px; font-size: 1.1em; }
+
+/* ====== Tables & Data Representation ====== */
+.progress-container { width: 100%; background-color: #e2e8f0; border-radius: 10px; margin-bottom: 20px; height: 20px; position: relative; overflow: hidden; }
+.progress-bar { height: 100%; background-color: #059669; width: 0%; transition: width 0.3s ease; }
+.progress-text { position: absolute; width: 100%; text-align: center; font-size: 0.8em; line-height: 20px; font-weight: bold; color: #1e3a8a; }
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto; /* Enables horizontal scroll on small screens */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling for iOS */
+    margin: 20px 0;
+}
+table { width: 100%; border-collapse: collapse; margin: 20px 0; background: white; }
+th, td { border: 1px solid #cbd5e1; padding: 12px; text-align: center; }
+th { background-color: #f8fafc; color: #475569; font-weight: 600; }
+.self-cell { background-color: #e2e8f0; color: #94a3b8; }
+
+/* Color for Top 2 (Finals) */
+.highlight-finalist {
+    background-color: #d1fae5; /* Light Green */
+    font-weight: bold;
+}
+
+/* Color for Semis or Qualifier participants */
+.highlight-qualified {
+    background-color: #dbeafe; /* Light Blue */
+}
+
+/* Optional: Make the text bolder in highlighted rows for better readability */
+.highlight-finalist td, .highlight-qualified td {
+    color: #1e3a8a;
+}
+
+/* ====== Components (Cards, Tags, Inputs) Match Cards (Updated for Render Func) ====== */
+   
+.match-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 5px;
+    gap: 5px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+
+/* Left/Right Meta Areas */
+.match-meta-left, .match-meta-right {
+    min-width: 45px;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: bold;
+    line-height: 1.2;
+}
+.round-text { color: #7c3aed; text-transform: uppercase; display: block; }
+.time-text { color: #6b7280; display: block; }
+.court-text { color: #374151; text-transform: uppercase; }
+
+/* Middle Content Area (Handles scrolling) */
+.match-content {
+    flex: 1;
+    overflow-x: hidden; /* Prevent horizontal scroll, names will wrap */
+    border-left: 1px solid #eee;
+    border-right: 1px solid #eee;
+    padding: 0 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.player-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 200px; /* Ensures space for names before scrolling */
+}
+
+.player-name-left, .player-name-right {
+    font-weight: bold;
+    color: #1e3a8a;
+    font-size: 0.85rem;
+    flex: 1;
+    
+    /* NEW STYLES FOR VERTICAL PAIRING */
+    display: flex;
+    flex-direction: column; /* Stack name elements vertically */
+    line-height: 1.2;
+    white-space: normal; /* Allow text wrapping */
+    word-wrap: break-word; /* Break long words */
+}
+
+/* Specific alignments for left/right */
+.player-name-left {
+    text-align: right;
+    align-items: flex-end; /* Align names to the right */
+}
+
+.player-name-right {
+    text-align: left;
+    align-items: flex-start; /* Align names to the left */
+}
+
+/* ADD THIS TO STYLE THE NAME AND PAIR SEPARATOR */
+.player-name-left span, .player-name-right span {
+    display: block; /* Treat each name as a block */
+}
+
+.pair-separator {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    margin: 1px 0; /* Small space above and below the hyphen */
+    font-weight: normal;
+    display: block; /* Ensure it stays on its own line */
+}
+.score-container {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin: 0 5px;
+}
+
+.score-input {
+    width: 35px;
+    text-align: center;
+    padding: 4px;
+    font-size: 0.9rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+}
+
+.score-separator {
+    font-weight: bold;
+    color: #9ca3af;
+}
+
+.error-hint {
+    font-size: 8px;
+    color: #e11d48;
+    position: absolute;
+    bottom: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    font-weight: bold;
+}
+/* ========================================= */
+
+.player-tag { 
+    background: #dbeafe; 
+    padding: 6px 14px; 
+    border-radius: 20px; 
+    font-size: 0.9em; 
+    margin: 5px; 
+    display: inline-block; 
+    border: 1px solid #bfdbfe; 
+    font-weight: 500; 
+}
+
+.live-standings-box { 
+    margin-top: 30px; 
+    border: 2px solid #2563eb; 
+    padding: 15px; 
+    border-radius: 12px; 
+    background: #fff; 
+}
+
+.score-input.invalid { border-color: #e11d48; background-color: #fff1f2; }
+.score-input.valid { border-color: #059669; background-color: #f0fdf4; }
+
+/* ====== Sharing / Exporting Styles ====== */
+.share-row { display: flex; gap: 10px; justify-content: center; margin: 15px 0; }
+.btn-share { padding: 10px 15px; font-size: 0.9em; border-radius: 6px; display: flex; align-items: center; gap: 5px; }
+.btn-pdf { background: #dc2626; }
+.btn-img { background: #0ea5e9; }
+.btn-email { background: #7c3aed; }
+.review-card { background: #f1f5f9; padding: 10px; margin: 5px 0; border-radius: 8px; border-left: 4px solid #2563eb; text-align: left; }
+
+/* ====== Mobile Optimization ====== */
+@media (max-width: 480px) { 
+.welcome-screen { padding: 40px 20px; } 
+.welcome-screen h2 { font-size: 1.8em; } 
+.btn-get-started { padding: 15px 30px; font-size: 1.1em; }
+
+/* ====== Ensure inputs fit on smaller screens ====== */
+.input-group { flex-direction: column; }
+input, select { width: 100%; box-sizing: border-box; }
+}
