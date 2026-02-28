@@ -1,71 +1,83 @@
 function generateSchedule() {
-      const courtLimit = parseInt(document.getElementById('court-count').value);
-      let [startH, startM] = document.getElementById('start-time').value.split(':').map(Number);
-      
-      // 1. Create the pool of all possible matchups
-      let pool = [];
-      for (let i = 0; i < pairs.length; i++) {
-          for (let j = i + 1; j < pairs.length; j++) {
-              pool.push({ tA: i, tB: j });
-          }
-      }
-      
-      // 2. Randomize initial order to avoid same patterns every tournament
-      pool.sort((a, b) => 0.5 - Math.random()); 
-      
-      matches = [];
-      let totalMin = startH * 60 + startM;
-      pairs.forEach(p => p.played = 0);
+    const courtLimit = parseInt(document.getElementById('court-count').value);
+    let [startH, startM] = document.getElementById('start-time').value.split(':').map(Number);
+    
+    // 1. Create the pool of all possible matchups
+    let pool = [];
+    for (let i = 0; i < pairs.length; i++) {
+        for (let j = i + 1; j < pairs.length; j++) {
+            pool.push({ tA: i, tB: j });
+        }
+    }
+    
+    // 2. Randomize initial order to avoid same patterns every tournament
+    pool.sort((a, b) => 0.5 - Math.random()); 
+    
+    matches = [];
+    let totalMin = startH * 60 + startM;
+    pairs.forEach(p => p.played = 0);
 
-      let roundCount = 1; 
+    let roundCount = 1; 
 
-      // 3. Keep looping until all matches in the pool are assigned
-      while (pool.length > 0) {
-          let busy = new Set();
-          let usedCourts = 0;
+    // 3. Keep looping until all matches in the pool are assigned
+    while (pool.length > 0) {
+        let busy = new Set();
+        let usedCourts = 0;
 
-          // Sort pool so teams that have played the FEWEST matches get picked first for this round
-          pool.sort((a, b) => (pairs[a.tA].played + pairs[a.tB].played) - (pairs[b.tA].played + pairs[b.tB].played));
+        // Sort pool so teams that have played the FEWEST matches get picked first for this round
+        pool.sort((a, b) => (pairs[a.tA].played + pairs[a.tB].played) - (pairs[b.tA].played + pairs[b.tB].played));
 
-          for (let i = 0; i < pool.length; i++) {
-              let m = pool[i];
+        // Create a copy of the pool to iterate over, as we will modify the original pool
+        let currentPool = [...pool];
 
-              // Check: Are both teams free this round AND is there a court available?
-              if (!busy.has(m.tA) && !busy.has(m.tB) && usedCourts < courtLimit) {
-                  m.time = `${Math.floor(totalMin/60).toString().padStart(2,'0')}:${(totalMin%60).toString().padStart(2,'0')}`;
-                  m.court = usedCourts + 1;
-                  m.round = roundCount; 
-                  m.sA = ''; m.sB = ''; m.done = false;
+        for (let i = 0; i < currentPool.length; i++) {
+            let m = currentPool[i];
 
-                  // Move match from pool to the actual matches array
-                  matches.push(pool.splice(i, 1)[0]);
+            // Check: Are both teams free this round AND is there a court available?
+            if (!busy.has(m.tA) && !busy.has(m.tB) && usedCourts < courtLimit) {
+                // Find the index of this match in the original pool
+                let poolIndex = pool.findIndex(p => p.tA === m.tA && p.tB === m.tB);
+                
+                if (poolIndex !== -1) {
+                    let match = pool.splice(poolIndex, 1)[0];
 
-                  // Mark teams as busy so they don't play twice in the same round
-                  busy.add(m.tA); 
-                  busy.add(m.tB);
+                    match.time = `${Math.floor(totalMin/60).toString().padStart(2,'0')}:${(totalMin%60).toString().padStart(2,'0')}`;
+                    
+                    // --- FIX: Assign courts 1, 2, 3 sequentially based on usedCourts ---
+                    match.court = usedCourts + 1;
+                    
+                    match.round = roundCount; 
+                    match.sA = ''; match.sB = ''; match.done = false;
 
-                  // Increment play count for sorting priority
-                  pairs[m.tA].played++; 
-                  pairs[m.tB].played++;
+                    // Move match from pool to the actual matches array
+                    matches.push(match);
 
-                  usedCourts++; 
-                  i--; // Adjust index because we removed an item from pool
-              }
-          }
+                    // Mark teams as busy so they don't play twice in the same round
+                    busy.add(match.tA); 
+                    busy.add(match.tB);
 
-          // 4. Move time forward 20 mins for the next set of matches (next round)
-          totalMin += 20; 
-          roundCount++;
+                    // Increment play count for sorting priority
+                    pairs[match.tA].played++; 
+                    pairs[match.tB].played++;
 
-          // Safety check to prevent infinite loops
-          if (roundCount > 500) break;
-      }
+                    usedCourts++; 
+                }
+            }
+        }
 
-      saveData(); 
-      showStep('tournament-section');
-      renderMatches();
-      updateLiveTable();
-  }
+        // 4. Move time forward 20 mins for the next set of matches (next round)
+        totalMin += 20; 
+        roundCount++;
+
+        // Safety check to prevent infinite loops
+        if (roundCount > 500) break;
+    }
+
+    saveData(); 
+    showStep('tournament-section');
+    renderMatches();
+    updateLiveTable();
+}
 
 function renderMatches() {
     document.getElementById('matches-container').innerHTML = matches.map((m, i) => {
