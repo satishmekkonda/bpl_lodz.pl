@@ -5,3 +5,5 @@ Group 1: Set of Advanced Players
 Group 2: Set of Intermediate Players
 Doubles Partners are a mix of one advanced and one intermediate
 Each time a tournament is initiated the same set of players are not partners again
+
+website: https://satishmekkonda.github.io/bpl.lodz.pl/

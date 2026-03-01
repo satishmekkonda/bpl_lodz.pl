@@ -114,23 +114,34 @@
     </div>
 
     <div id="tournament-section" class="hidden">
-		<h3 style="margin-top:0; color:#1e3a8a;">Full Schedule</h3>
-        <div class="progress-container">
-            <div id="p-bar" class="progress-bar"></div>
-            <div id="p-text" class="progress-text">Progress: 0%</div>
+        <div id="capture-schedule" style="padding: 10px; background: white;">
+            <h3 style="margin-top:0; color:#1e3a8a; text-align: center;">Full Schedule</h3>
+            <div class="progress-container">
+                <div id="p-bar" class="progress-bar"></div>
+                <div id="p-text" class="progress-text">Progress: 0%</div>
+            </div>
+            <div id="matches-container"></div>
+            <div class="live-standings-box">
+                <h3 style="margin-top:0; color:#1e3a8a;">📊 Live Standings</h3>
+                <div class="table-responsive">
+                    <table style="font-size: 0.85em;">
+                        <thead><tr><th>Team</th><th>P</th><th>W</th><th>L</th><th>Pts</th><th>Score</th></tr></thead>
+                        <tbody id="live-body"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <div id="matches-container"></div>
-        <div class="live-standings-box">
-            <h3 style="margin-top:0; color:#1e3a8a;">📊 Live Standings</h3>
-            <div class="table-responsive">
-            <table style="font-size: 0.85em;">
-                <thead><tr><th>Team</th><th>P</th><th>W</th><th>L</th><th>Pts</th><th>Score</th></tr></thead>
-                <tbody id="live-body"></tbody>
-            </table>
+        
+        <div class="share-row">
+            <button class="btn-share btn-pdf" onclick="exportPDF('capture-schedule', 'BPL_Schedule')">Save PDF</button>
+            <button class="btn-share btn-img" onclick="exportImage('capture-schedule', 'BPL_Schedule')">Save Image</button>
+            <button class="btn-share btn-email" onclick="shareEmail('capture-schedule')">Email</button>
         </div>
+
+        <div style="text-align: center; margin-top:20px;">
+            <button class="back" onclick="showStep('step-courts')">← Back</button>
+            <button id="calc-results-btn" class="finish" style="width: auto; padding: 12px 30px; margin-left:10px;" onclick="calculateResults()">Finish Group Stage</button>
         </div>
-        <div style="text-align: center; margin-top:20px;"><button class="back" onclick="showStep('step-courts')">← Back</button></div>
-        <button id="calc-results-btn" class="finish" onclick="calculateResults()">Finish Group Stage</button>
     </div>
 
     <div id="results-section" class="hidden">
