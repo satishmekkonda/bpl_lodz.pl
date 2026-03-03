@@ -37,7 +37,8 @@ window.onload = function() {
 	
 //Not lose Entered Data on refresh
 function saveData() {
-    const data = { advPlayers, intPlayers, manualPlayers, pairs, matches, isManualMode };
+    // Added playoffScores to the object below
+    const data = { advPlayers, intPlayers, manualPlayers, pairs, matches, isManualMode, playoffScores }; 
     localStorage.setItem('bpl_2026_data', JSON.stringify(data));
 }
 
@@ -53,6 +54,7 @@ function loadData() {
         pairs = data.pairs || [];
         matches = data.matches || [];
         isManualMode = data.isManualMode || false;
+        if (data.playoffScores) playoffScores = data.playoffScores;
         
         if (window.renderLists) renderLists();
         if (window.renderManualList) renderManualList();
@@ -60,6 +62,19 @@ function loadData() {
         if (matches.length > 0) {
             if (window.renderMatches) renderMatches();
             if (window.updateLiveTable) updateLiveTable();
+
+            // --- FIX: Rebuild Overview Table on load to prevent empty display ---
+            const overviewBody = document.getElementById('overview-table-body');
+            if (overviewBody) {
+                overviewBody.innerHTML = matches.map(m => `
+                    <tr>
+                        <td>${m.round}</td>
+                        <td>Court ${m.court}</td>
+                        <td>${m.time}</td>
+                        <td style="font-weight: bold;">${pairs[m.tA].name} vs ${pairs[m.tB].name}</td>
+                    </tr>
+                `).join('');
+            }
         }
 
         if (lastStep && lastStep !== 'step-welcome') {

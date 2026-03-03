@@ -113,9 +113,39 @@
         </div>
     </div>
 
+    <div id="step-schedule-overview" class="hidden">
+        <div id="capture-overview" style="padding: 15px; background: white; border-radius: 8px;">
+            <h2 style="text-align: center; color: #1e3a8a; margin-top: 0;">Schedule</h2>
+            <div class="table-responsive">
+                <table class="schedule-table">
+                    <thead>
+                        <tr>
+                            <th>Round</th>
+                            <th>Court</th>
+                            <th>Time</th>
+                            <th>Match</th>
+                        </tr>
+                    </thead>
+                    <tbody id="overview-table-body">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="share-row" style="margin-top: 20px;">
+            <button class="btn-share btn-img" onclick="exportImage('capture-overview', 'BPL_Schedule')">Save Image</button>
+            <button class="btn-share btn-pdf" onclick="exportPDF('capture-overview', 'BPL_Schedule')">Save PDF</button>
+        </div>
+
+        <div style="text-align: center; margin-top: 20px;">
+            <button class="back" onclick="showStep('step-courts')">← Back</button>
+            <button class="finish" style="width: auto; padding: 12px 30px; margin-left: 10px;" onclick="showStep('tournament-section')">Start Tournament →</button>
+        </div>
+    </div>
+
     <div id="tournament-section" class="hidden">
         <div id="capture-schedule" style="padding: 10px; background: white;">
-            <h3 style="margin-top:0; color:#1e3a8a; text-align: center;">Full Schedule</h3>
+            <h3 style="margin-top:0; color:#1e3a8a; text-align: center;">Live Scores</h3>
             <div class="progress-container">
                 <div id="p-bar" class="progress-bar"></div>
                 <div id="p-text" class="progress-text">Progress: 0%</div>
@@ -133,13 +163,13 @@
         </div>
         
         <div class="share-row">
-            <button class="btn-share btn-pdf" onclick="exportPDF('capture-schedule', 'BPL_Schedule')">Save PDF</button>
-            <button class="btn-share btn-img" onclick="exportImage('capture-schedule', 'BPL_Schedule')">Save Image</button>
+            <button class="btn-share btn-pdf" onclick="exportPDF('capture-schedule', 'BPL_Live_Status')">Save PDF</button>
+            <button class="btn-share btn-img" onclick="exportImage('capture-schedule', 'BPL_Live_Status')">Save Image</button>
             <button class="btn-share btn-email" onclick="shareEmail('capture-schedule')">Email</button>
         </div>
 
         <div style="text-align: center; margin-top:20px;">
-            <button class="back" onclick="showStep('step-courts')">← Back</button>
+            <button class="back" onclick="showStep('step-schedule-overview')">← Back</button>
             <button id="calc-results-btn" class="finish" style="width: auto; padding: 12px 30px; margin-left:10px;" onclick="calculateResults()">Finish Group Stage</button>
         </div>
     </div>
@@ -165,24 +195,39 @@
 
     <div id="leaderboard-section" class="hidden">
         <div id="capture-leaderboard" style="padding: 10px; background: white;">
-            <h2 style="text-align: center;">Final Standings</h2>
+        
+            <h2 style="text-align: center; margin-top: 10px;">Points Table</h2>
             <div class="table-responsive">
-            <table id="points-table">
-                <thead><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>L</th><th>Pts</th><th>Score</th></tr></thead>
-                <tbody id="table-body"></tbody>
-            </table>
+                <table id="points-table">
+                    <thead><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>L</th><th>Pts</th><th>Score</th></tr></thead>
+                    <tbody id="table-body"></tbody>
+                </table>
             </div>
-            <div id="playoff-container" class="playoff-box" style="background: #eff6ff; border: 2px dashed #2563eb; padding: 20px; border-radius: 12px; margin: 20px 0; text-align: center;"></div>
+
+            <h2 style="text-align: center; margin-top: 30px;">🏆 Playoffs</h2>
+            <div id="playoff-matches-container" style="margin: 20px 0;"></div>
+            
         </div>
+        
         <div class="share-row">
             <button class="btn-share btn-pdf" onclick="exportPDF('capture-leaderboard', 'BPL_Leaderboard')">Save PDF</button>
             <button class="btn-share btn-img" onclick="exportImage('capture-leaderboard', 'BPL_Leaderboard')">Save Image</button>
             <button class="btn-share btn-email" onclick="shareEmail('capture-leaderboard')">Email</button>
         </div>
-        <div style="text-align: center; margin-top: 20px;">
-            <button class="back" onclick="showStep('results-section')">← Back</button>
-			<button onclick="clearTournament()" style="background:#dc2626; color:white; padding:12px; border-radius:8px; border:none; font-weight:bold; margin-left:10px;">New Tournament</button>
-        </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; margin-top: 15px; padding: 0 10px;"> 
+                <button onclick="resetPlayoffs()" class="btn-reset" 
+                        style="flex: 0 1 auto; background-color: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 15px; border-radius: 6px; font-size: 14px; font-weight: bold; cursor: pointer;">
+                    Reset Playoff Scores
+                </button>
+                <button class="back" onclick="showStep('results-section')" 
+                        style="flex: 0 1 auto; padding: 8px 15px; font-size: 14px; margin: 0;">
+                    ← Back
+                </button>
+                <button onclick="clearTournament()" 
+                        style="flex: 0 1 auto; background: #dc2626; color: white; padding: 8px 15px; border-radius: 6px; border: none; font-size: 14px; font-weight: bold;">
+                    New Tournament
+                </button>
+            </div>
     </div>
 </div>
 
