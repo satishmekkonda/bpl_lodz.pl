@@ -44,7 +44,7 @@
 
     <div id="step-adv" class="hidden">
         <h2 class="left-align">Player Registration: Captains</h2>
-		<p style="font-size: 0.9em; color: #64748b;">Enter Captain Names for each team, who will be player 1.</p>
+        <p style="font-size: 0.9em; color: #64748b;">Enter Captain Names for each team, who will be player 1.</p>
         <div class="center-controls">
             <div class="input-group">
                 <input type="text" id="name-adv" placeholder="Name..." onkeypress="if(event.key==='Enter') addPlayer('Captains')">
@@ -54,13 +54,13 @@
         </div>
         <div id="list-adv" class="left-align"></div>
         <div style="text-align: center; margin-top: 25px;">
-		<button class="back" onclick="showStep('step-manual')">← Back</button>
-		<button id="btn-to-int" class="hidden" onclick="showStep('step-int')">Next</button></div>
+        <button class="back" onclick="showStep('step-manual')">← Back</button>
+        <button id="btn-to-int" class="hidden" onclick="showStep('step-int')">Next</button></div>
     </div>
 
     <div id="step-int" class="hidden">
         <h2 class="left-align">Player Registration: Vice-Captains</h2>
-		<p style="font-size: 0.9em; color: #64748b;">Vice-Captains will be assigned randomly to each Captain, forming a double's pair.</p>
+        <p style="font-size: 0.9em; color: #64748b;">Vice-Captains will be assigned randomly to each Captain, forming a double's pair.</p>
         <div class="center-controls">
             <div id="int-requirement" style="font-weight:bold; color:#e11d48; margin-bottom:15px;"></div>
             <div class="input-group">
@@ -77,7 +77,7 @@
 
     <div id="step-review" class="hidden">
         <h2 class="left-align">Review Generated Teams</h2>
-		<p style="font-size: 0.9em; color: #64748b;">Use Shuffle to change partner's (NA for Manual Registrations)</p>
+        <p style="font-size: 0.9em; color: #64748b;">Use Shuffle to change partner's (NA for Manual Registrations)</p>
         <div id="review-list"></div>
         
         <div id="review-controls" style="margin-top: 25px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;">
@@ -102,12 +102,23 @@
                     <option value="7">7</option><option value="8">8</option><option value="9">9</option>
                 </select>
             </div>
+            <!-- NEW ENHANCEMENT: Choose Round Robin Matches -->
+            <div class="input-group">
+                <label>Round Robin:</label>
+                <select id="rr-matches" style="width: 80px;">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                </select>
+            </div>
             <div class="input-group">
                 <label>Start Time:</label>
                 <select id="start-time"></select>
             </div>
             <div style="text-align: center; margin-top: 25px;">
-				<button class="back" onclick="goBackFromCourts()">← Back</button>
+                <button class="back" onclick="goBackFromCourts()">← Back</button>
                 <button class="finish" style="width: auto; padding: 12px 30px;" onclick="generateSchedule()">Generate Schedule</button>
             </div>
         </div>

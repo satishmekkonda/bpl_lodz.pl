@@ -7,26 +7,44 @@ let playoffScores = {
 };
 
 function generateSchedule() {
+    // --- NEW: PREVENTION CHECK ---
+    // Added to prevent accidental reshuffling when you just want to view the schedule
+    if (matches && matches.length > 0) {
+        const confirmReshuffle = confirm("A schedule already exists, are you sure you want to RE-GENERATE?");
+        if (!confirmReshuffle) {
+            // If they cancel, just take them to the existing overview without changing anything
+            showStep('step-schedule-overview');
+            return; 
+        }
+    }
+
     const courtLimit = parseInt(document.getElementById('court-count').value);
+    // NEW: Get the number of Round Robin sets (1-5)
+    const rrSets = parseInt(document.getElementById('rr-matches').value) || 1;
     let [startH, startM] = document.getElementById('start-time').value.split(':').map(Number);
     
     // --- STEP A: BACKUP SCORES USING SORTED TEAM KEYS ---
     const scoreBackup = {};
     matches.forEach(m => {
-        const key = [m.tA, m.tB].sort().join('-');
+        // Updated key to include set number to distinguish between repeat matches
+        const key = [m.tA, m.tB].sort().join('-') + '_s' + (m.setNum || 1);
         scoreBackup[key] = { sA: m.sA, sB: m.sB, done: m.done };
     });
 
     // 1. Create the pool of all possible matchups
     let pool = [];
-    for (let i = 0; i < pairs.length; i++) {
-        for (let j = i + 1; j < pairs.length; j++) {
-            pool.push({ tA: i, tB: j });
+    // Enhanced: Repeat the pool generation based on rrSets
+    for (let s = 1; s <= rrSets; s++) {
+        let setPool = [];
+        for (let i = 0; i < pairs.length; i++) {
+            for (let j = i + 1; j < pairs.length; j++) {
+                setPool.push({ tA: i, tB: j, setNum: s });
+            }
         }
+        // 2. Randomize initial order to avoid same patterns every tournament
+        setPool.sort((a, b) => 0.5 - Math.random()); 
+        pool.push(...setPool);
     }
-    
-    // 2. Randomize initial order to avoid same patterns every tournament
-    pool.sort((a, b) => 0.5 - Math.random()); 
     
     matches = [];
     let totalMin = startH * 60 + startM;
@@ -51,7 +69,7 @@ function generateSchedule() {
             // Check: Are both teams free this round AND is there a court available?
             if (!busy.has(m.tA) && !busy.has(m.tB) && usedCourts < courtLimit) {
                 // Find the index of this match in the original pool
-                let poolIndex = pool.findIndex(p => p.tA === m.tA && p.tB === m.tB);
+                let poolIndex = pool.findIndex(p => p.tA === m.tA && p.tB === m.tB && p.setNum === m.setNum);
                 
                 if (poolIndex !== -1) {
                     let match = pool.splice(poolIndex, 1)[0];
@@ -64,7 +82,7 @@ function generateSchedule() {
                     match.round = roundCount; 
                     
                     // --- STEP B: RESTORE BACKED UP SCORES ---
-                    const key = [match.tA, match.tB].sort().join('-');
+                    const key = [match.tA, match.tB].sort().join('-') + '_s' + match.setNum;
                     if (scoreBackup[key]) {
                         match.sA = scoreBackup[key].sA;
                         match.sB = scoreBackup[key].sB;
@@ -94,7 +112,7 @@ function generateSchedule() {
         roundCount++;
 
         // Safety check to prevent infinite loops
-        if (roundCount > 500) break;
+        if (roundCount > 1000) break;
     }
 
     // --- NEW: POPULATE OVERVIEW TABLE ---
@@ -226,28 +244,78 @@ function updateLiveTable() {
 }
 
 function calculateResults() {
-    if (matches.some(m => !m.done && (m.sA || m.sB))) {
-         if (!confirm("Some scores are invalid. Finish anyway?")) return;
-    }
-    pairs.forEach(p => { p.played=0; p.wins=0; p.lost=0; p.points=0; p.score=0; p.results={}; });
+    // 1. Initialize stats for all pairs
+    pairs.forEach(p => {
+        p.played = 0; p.wins = 0; p.lost = 0; p.points = 0; p.score = 0;
+    });
+
+    // 2. Calculate from matches
     matches.forEach(m => {
-        if(m.sA === '' || m.sB === '') return;
-        let a = parseInt(m.sA), b = parseInt(m.sB);
-        pairs[m.tA].played++; pairs[m.tB].played++;
-        pairs[m.tA].score += a; pairs[m.tB].score += b;
-        pairs[m.tA].results[m.tB] = `${a}-${b}`; pairs[m.tB].results[m.tA] = `${b}-${a}`;
-        if(a > b) { pairs[m.tA].wins++; pairs[m.tA].points+=2; pairs[m.tB].lost++; }
-        else { pairs[m.tB].wins++; pairs[m.tB].points+=2; pairs[m.tA].lost++; }
+        if (m.done) {
+            const sA = parseInt(m.sA) || 0;
+            const sB = parseInt(m.sB) || 0;
+            pairs[m.tA].played++;
+            pairs[m.tB].played++;
+            pairs[m.tA].score += sA;
+            pairs[m.tB].score += sB;
+
+            if (sA > sB) {
+                pairs[m.tA].wins++; pairs[m.tA].points += 2;
+                pairs[m.tB].lost++;
+            } else if (sB > sA) {
+                pairs[m.tB].wins++; pairs[m.tB].points += 2;
+                pairs[m.tA].lost++;
+            }
+        }
     });
-    let mx = `<tr><th>Teams</th>` + pairs.map(p => `<th>${p.name}</th>`).join('') + `</tr>`;
-    pairs.forEach((r, i) => {
-        mx += `<tr><td><strong>${r.name}</strong></td>`;
-        pairs.forEach((_, j) => mx += (i===j) ? `<td class="self-cell">X</td>` : `<td>${r.results[j] || '—'}</td>`);
-        mx += `</tr>`;
+
+    // --- SCORE MATRIX GENERATION ---
+    const matrix = document.getElementById('matrix-table');
+    let header = '<tr><th>Team</th>' + pairs.map(p => `<th>${p.name}</th>`).join('') + '</tr>';
+    let rows = '';
+
+    for (let i = 0; i < pairs.length; i++) {
+        let row = `<tr><td><strong>${pairs[i].name}</strong></td>`;
+        for (let j = 0; j < pairs.length; j++) {
+            if (i === j) {
+                row += `<td style="background:#f1f5f9;">-</td>`;
+            } else {
+                // NEW: Find ALL matches between these two teams
+                const pairMatches = matches.filter(m => 
+                    (m.tA === i && m.tB === j) || (m.tA === j && m.tB === i)
+                );
+
+                // Format scores: if Team i is tA, show sA-sB, else show sB-sA
+                let scoreDisplay = pairMatches
+                    .filter(m => m.done)
+                    .map(m => {
+                        return m.tA === i ? `${m.sA}-${m.sB}` : `${m.sB}-${m.sA}`;
+                    })
+                    .join('<br>'); // Use <br> to stack multiple scores neatly
+
+                row += `<td>${scoreDisplay || ''}</td>`;
+            }
+        }
+        row += '</tr>';
+        rows += row;
+    }
+    matrix.innerHTML = header + rows;
+
+    // --- RECAP TABLE GENERATION ---
+    const recap = document.getElementById('recap-table');
+    recap.innerHTML = '<thead><tr><th>Round</th><th>Match</th><th>Result</th></tr></thead>';
+    const recapBody = document.createElement('tbody');
+    matches.forEach(m => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${m.round}</td>
+            <td>${pairs[m.tA].name} vs ${pairs[m.tB].name}</td>
+            <td>${m.done ? `<strong>${m.sA} - ${m.sB}</strong>` : '<em>Pending</em>'}</td>
+        `;
+        recapBody.appendChild(tr);
     });
-    document.getElementById('matrix-table').innerHTML = mx;
-    document.getElementById('recap-table').innerHTML = `<thead><tr><th>Time</th><th>Court</th><th>Match</th><th>Score</th></tr></thead>` + 
-        matches.map(m => `<tr><td>${m.time}</td><td>${m.court}</td><td>${pairs[m.tA].name} vs ${pairs[m.tB].name}</td><td>${m.sA}-${m.sB}</td></tr>`).join('');
+    recap.appendChild(recapBody);
+
     showStep('results-section');
 }
 
@@ -425,13 +493,17 @@ function updatePlayoffScore(matchId, side) {
 
         // Update Names on Screen Instantly
         ['q1', 'elim', 'q2', 'final'].forEach(mId => {
-            document.getElementById(`${mId}-nameA`).innerText = playoffScores[mId].teamA || 'TBD';
-            document.getElementById(`${mId}-nameB`).innerText = playoffScores[mId].teamB || 'TBD';
+            const elA = document.getElementById(`${mId}-nameA`);
+            const elB = document.getElementById(`${mId}-nameB`);
+            if(elA) elA.innerText = playoffScores[mId].teamA || 'TBD';
+            if(elB) elB.innerText = playoffScores[mId].teamB || 'TBD';
         });
 
         // Show Champion if Final is done
         if (matchId === 'final' || playoffScores.final.done) {
-            const champName = parseInt(playoffScores.final.sA) > parseInt(playoffScores.final.sB) ? playoffScores.final.teamA : playoffScores.final.teamB;
+            const fA = parseInt(playoffScores.final.sA);
+            const fB = parseInt(playoffScores.final.sB);
+            const champName = fA > fB ? playoffScores.final.teamA : playoffScores.final.teamB;
             let champDiv = document.getElementById('champ-win');
             if (!champDiv) {
                 champDiv = document.createElement('div');
