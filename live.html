@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BPL 2026 Live Dashboard</title>
+    <!-- Link existing admin styles here to reuse all classes -->
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* Specific tweaks for the Live View to look like the Admin Recap */
+        body { background-color: #f1f5f9; padding: 15px; }
+        .live-banner { 
+            background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+            color: white; padding: 25px; border-radius: 12px; text-align: center; margin-bottom: 25px; 
+        }
+        .live-dot { height: 10px; width: 10px; background-color: #ef4444; border-radius: 50%; display: inline-block; margin-right: 8px; animation: blink 1.5s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        
+        .section-card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h2 { color: #1e3a8a; text-align: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 20px; }
+
+        /* Expand/Collapse Styling */
+        summary { cursor: pointer; list-style: none; outline: none; }
+        summary::-webkit-details-marker { display: none; }
+        .expand-hint { color: #2563eb; font-size: 0.75rem; font-weight: bold; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        details[open] .expand-hint { color: #ef4444; }
+
+        /* Matrix Mobile Scroll */
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        #matrix-table { width: 100%; border-collapse: collapse; min-width: 650px; }
+        #matrix-table th, #matrix-table td { border: 1px solid #cbd5e1; padding: 8px; text-align: center; font-size: 0.85rem; }
+        
+        #matrix-table td:first-child, #matrix-table th:first-child { 
+            position: sticky; left: 0; background: #f8fafc; font-weight: bold; z-index: 2; border-right: 2px solid #cbd5e1;
+        }
+
+        .playoff-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
+        .champ-box { text-align: center; padding: 20px; background: #f0fdf4; border: 3px solid #22c55e; border-radius: 12px; color: #15803d; font-weight: 800; font-size: 1.5rem; margin-top: 20px; }
+
+        .share-row { display: flex; gap: 10px; justify-content: center; margin: 20px 0 40px 0; }
+        .btn-share { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; transition: transform 0.1s; }
+        .btn-share:active { transform: scale(0.95); }
+        .btn-img { background: #059669; }
+        .btn-pdf { background: #dc2626; }
+    </style>
+</head>
+<body>
+
+<!-- HIDDEN STRUCTURE TO STOP CLONENODE ERROR -->
+<div style="display:none;">
+    <div id="tournament-header">
+        <div class="header-content">
+            <h1 id="tournament-name-display">BPL 2026</h1>
+            <p id="tournament-date-display"></p>
+        </div>
+    </div>
+</div>
+
+<!-- Main Capture Area -->
+<div id="capture-overview" class="container" style="max-width: 1100px; background: #f1f5f9; padding: 10px;">
+    
+    <div class="live-banner header-row" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%;">
+    
+        <!-- Line 1: Tournament Title -->
+        <h1 style="color: white; margin: 0; font-size: 1.8rem; width: 100%;">
+            🏸 BPL 2026 
+        </h1>
+        
+        <!-- Line 2: Dashboard Status -->
+        <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; color: white; font-size: 1.2rem; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; width: 100%;">
+            <span class="live-dot"></span> LIVE DASHBOARD
+        </div>
+
+        <!-- Line 3: Sync Time -->
+        <div id="sync-time" style="margin-top: 12px; font-size: 0.8rem; color: white; opacity: 0.8; font-weight: bold; letter-spacing: 0.5px; width: 100%;">
+            Last Sync: --:--:--
+        </div>
+    </div>
+
+    <!-- 1. Schedule -->
+    <div class="section-card">
+        <details>
+            <summary>
+                <h2>📅 Schedule</h2>
+                <div class="expand-hint">Click to View Schedule</div>
+            </summary>
+            <div class="table-responsive" style="margin-top: 20px;">
+                <table class="schedule-table">
+                    <thead>
+                        <tr>
+                            <th>Round</th>
+                            <th>Court</th>
+                            <th>Time</th>
+                            <th>Match</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="schedule-body"></tbody>
+                </table>
+            </div>
+        </details>
+    </div>
+
+    <!-- 2. Score Matrix -->
+    <div class="section-card">
+        <details>
+            <summary>
+                <h2>🔢 Score Matrix</h2>
+                <div class="expand-hint">Click to View Matrix</div>
+            </summary>
+            <div class="table-responsive" style="margin-top: 20px;">
+                <table id="matrix-table" class="results-table"></table>
+            </div>
+        </details>
+    </div>
+
+    <!-- 3. Points Table -->
+    <div class="section-card">
+        <details open> <!-- Points table stays open by default as it is most important -->
+            <summary>
+                <h2>📊 Points Table</h2>
+                <div class="expand-hint">Click to Toggle Table</div>
+            </summary>
+            <div class="table-responsive" style="margin-top: 20px;">
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr><th>Position</th><th>Team</th><th>P</th><th>W</th><th>L</th><th>Pts</th><th>Score</th></tr>
+                    </thead>
+                    <tbody id="standings-body"></tbody>
+                </table>
+            </div>
+        </details>
+    </div>
+
+    <!-- 4. Playoff Section -->
+    <div id="playoff-section" class="section-card" style="display:none;">
+        <details open>
+            <summary>
+                <h2>🏁 Playoff's 🏁</h2>
+                <div class="expand-hint">Click to Toggle Playoffs</div>
+            </summary>
+            <div id="playoff-container" class="playoff-grid" style="margin-top: 20px;"></div>
+            <div id="champion-display"></div>
+        </details>
+    </div>
+
+    <!-- This is the gold box that appears when finished -->
+    <div id="final-results-overlay" style="visibility: hidden; height: 0; overflow: hidden; text-align: center; border-top: 1px solid #cbd5e1; margin: 0; padding: 0;">
+    <p style="margin: 20px 0; font-weight: 600; color: #b8860b; letter-spacing: 2px; font-size: 0.8rem; text-transform: uppercase;">
+        🤝 Tournament खत्म, Dziękuję 🤝
+    </p>
+</div>
+</div>
+
+<!-- Buttons remain simple and on-page -->
+<div class="share-row">
+    <button class="btn-share btn-img" onclick="exportLiveImage()">Save Image</button>
+    <button class="btn-share btn-pdf" onclick="exportLivePDF()">Save PDF</button>
+</div>
+
+<!-- Scripts - Libraries MUST load before export.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="js/export.js"></script>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCER6EXquE48y0wPTciNRrOX2tMMj669LQ",
+        authDomain: "bpl-lodz.firebaseapp.com",
+        databaseURL: "https://bpl-lodz-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "bpl-lodz",
+        storageBucket: "bpl-lodz.firebasestorage.app",
+        messagingSenderId: "554448101219",
+        appId: "1:554448101219:web:8140d90945669a5e1bbd56"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    db.ref('live_tournament').on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+            updateLiveUI(data);
+            // 24H Format forced via 'en-GB' locale
+            document.getElementById('sync-time').innerText = "Last Sync: " + new Date().toLocaleTimeString('en-GB', { 
+                day: '2-digit', 
+                month: 'short',
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit', 
+                hour12: false 
+            }) + ", ŁÓDŹ";
+        }
+    });
+
+    function updateLiveUI(data) {
+        const { matches, pairs, playoffScores, finished } = data;
+
+        // --- Handle Finish Overlay (Image-Safe Version) ---
+        const overlay = document.getElementById('final-results-overlay');
+        if (finished) {
+            overlay.style.visibility = 'visible';
+            overlay.style.height = 'auto';
+            overlay.style.margin = '30px 0';
+        } else {
+            overlay.style.visibility = 'hidden';
+            overlay.style.height = '0';
+            overlay.style.margin = '0';
+        }
+
+        // Schedule
+        if(matches) {
+            document.getElementById('schedule-body').innerHTML = matches.map(m => `
+                <tr>
+                    <td>R ${m.round}</td><td>C ${m.court}</td><td>${m.time}</td>
+                    <td style="font-weight:bold;">${pairs[m.tA].name} vs ${pairs[m.tB].name}</td>
+                    <td><span style="padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; ${m.done ? 'background: #dcfce7; color: #166534;' : 'background: #f1f5f9; color: #475569;'}">${m.done ? "✅ Completed" : "⏳ Not Started"}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        // Matrix
+        if(pairs && matches) {
+            let matrixHtml = '<tr><th>Team</th>' + pairs.map(p => `<th>${p.name}</th>`).join('') + '</tr>';
+            pairs.forEach((pI, i) => {
+                matrixHtml += `<tr><td>${pI.name}</td>`;
+                pairs.forEach((pJ, j) => {
+                    if (i === j) matrixHtml += `<td class="self-cell">-</td>`;
+                    else {
+                        const pairMatches = matches.filter(m => (m.tA === i && m.tB === j) || (m.tA === j && m.tB === i));
+                        const scores = pairMatches.filter(m => m.done).map(m => m.tA === i ? `${m.sA}-${m.sB}` : `${m.sB}-${m.sA}`).join('<br>');
+                        matrixHtml += `<td>${scores || '-'}</td>`;
+                    }
+                });
+                matrixHtml += '</tr>';
+            });
+            document.getElementById('matrix-table').innerHTML = matrixHtml;
+        }
+
+        // Standings
+        if(pairs && matches) {
+            let stats = pairs.map(p => ({ name: p.name, pld: 0, w: 0, l: 0, pts: 0, sc: 0 }));
+            matches.forEach(m => {
+                if (!m.done) return;
+                const sa = parseInt(m.sA), sb = parseInt(m.sB);
+                stats[m.tA].pld++; stats[m.tB].pld++; stats[m.tA].sc += sa; stats[m.tB].sc += sb;
+                if (sa > sb) { stats[m.tA].w++; stats[m.tA].pts += 2; stats[m.tB].l++; }
+                else { stats[m.tB].w++; stats[m.tB].pts += 2; stats[m.tA].l++; }
+            });
+            stats.sort((a,b) => b.pts - a.pts || b.sc - a.sc);
+            document.getElementById('standings-body').innerHTML = stats.map((s, i) => `
+                <tr class="${i < 2 ? 'highlight-finalist' : (i < 4 ? 'highlight-qualified' : '')}">
+                    <td>${i+1}</td><td><strong>${s.name}</strong></td><td>${s.pld}</td><td>${s.w}</td><td>${s.l}</td><td><strong>${s.pts}</strong></td><td>${s.sc}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Playoff
+        if (playoffScores && Object.values(playoffScores).some(m => m.teamA)) {
+            document.getElementById('playoff-section').style.display = 'block';
+            const labels = { q1: '🚀 Qualifier 1 🚀', elim: '⚔️ Eliminator ⚔️', q2: '🔁 Qualifier 2 🔁' };
+            const gridHtml = Object.keys(labels).map(key => {
+                const m = playoffScores[key];
+                return `
+                    <div class="playoff-match-card">
+                        <h4>${labels[key]}</h4>
+                        <div style="display:flex; justify-content:center; align-items:center; gap:8px;">
+                            <span style="flex:1; text-align:right;">${m.teamA || 'TBD'}</span>
+                            <span class="player-tag">${m.done ? m.sA + ' - ' + m.sB : 'VS'}</span>
+                            <span style="flex:1; text-align:left;">${m.teamB || 'TBD'}</span>
+                        </div>
+                    </div>`;
+            }).join('');
+
+            const finalM = playoffScores.final;
+            const finalHtml = `
+                <div style="grid-column: 1 / -1; display: flex; justify-content: center; width: 100%; margin-top: 20px;">
+                    <div class="playoff-match-card" style="width: 100%; max-width: 550px; border: 3px solid #1e3a8a;">
+                        <h4 style="background:#1e3a8a; color:white; margin:-20px -20px 15px -20px; padding:12px; border-radius:10px 10px 0 0;">💎 Grand Final 💎</h4>
+                        <div style="display:flex; justify-content:center; align-items:center; gap:15px; font-size:1.3rem; font-weight:bold;">
+                            <span>${finalM.teamA || 'TBD'}</span>
+                            <span class="player-tag" style="background:#1e3a8a; color:white; padding:8px 20px; border-radius: 8px;">${finalM.done ? finalM.sA + ' - ' + finalM.sB : 'VS'}</span>
+                            <span>${finalM.teamB || 'TBD'}</span>
+                        </div>
+                    </div>
+                </div>`;
+            document.getElementById('playoff-container').innerHTML = gridHtml + finalHtml;
+            if (finalM && finalM.done) {
+                const winner = finalM.sA > finalM.sB ? finalM.teamA : finalM.teamB;
+                document.getElementById('champion-display').innerHTML = `
+                    <div class="champ-box">
+                        🏆 CHAMPIONS 🏆
+                        <br>
+                        <span style="font-size: 1.5rem; display: block; margin-top: 10px;">
+                            🥇 ${winner} 🥇
+                        </span>
+                    </div>`;
+}
+        }
+    }
+</script>
+</body>
+</html>

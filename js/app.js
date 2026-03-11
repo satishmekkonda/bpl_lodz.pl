@@ -40,6 +40,11 @@ function saveData() {
     // Added playoffScores to the object below
     const data = { advPlayers, intPlayers, manualPlayers, pairs, matches, isManualMode, playoffScores }; 
     localStorage.setItem('bpl_2026_data', JSON.stringify(data));
+
+    // Mirror data to the cloud
+    if (typeof db !== 'undefined') {
+        db.ref('live_tournament').set(data);
+    }
 }
 
 function loadData() {

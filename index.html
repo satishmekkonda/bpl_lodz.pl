@@ -7,6 +7,14 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+<div id="admin-login-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;">
+    <h2>BPL Admin Access</h2>
+    <input type="email" id="admin-email" placeholder="Email" style="padding:10px; border:1px solid #ccc; border-radius:5px;">
+    <input type="password" id="admin-pass" placeholder="Password" style="padding:10px; border:1px solid #ccc; border-radius:5px;">
+    <button onclick="handleLogin()" style="padding:10px 20px; background:#1e3a8a; color:white; border:none; border-radius:5px; cursor:pointer;">Login</button>
+    <p id="login-error" style="color:red; font-size:0.8rem;"></p>
+</div>
+
 <div class="container">
     <div class="header-row">
         <div style="min-width:100px;"></div>
@@ -215,7 +223,7 @@
                 </table>
             </div>
 
-            <h2 style="text-align: center; margin-top: 30px;">🏆 Playoffs</h2>
+            <h2 style="text-align: center; margin-top: 30px;">🏆 Playoff`s</h2>
             <div id="playoff-matches-container" style="margin: 20px 0;"></div>
             
         </div>
@@ -238,9 +246,22 @@
                         style="flex: 0 1 auto; background: #dc2626; color: white; padding: 8px 15px; border-radius: 6px; border: none; font-size: 14px; font-weight: bold;">
                     New Tournament
                 </button>
+                <button id="finish-btn" onclick="toggleTournamentStatus()" style="background-color: #ffd700; color: #000; font-weight: bold; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    🏆 Finish Tournament
+                </button>
             </div>
     </div>
 </div>
+
+    <!-- Firebase App (the main library) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <!-- Firebase Realtime Database (the live data tool) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <!-- Firebase Admin Authentication -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <!-- The Secret Config second (defines the variable) -->
+    <script src="js/firebase-config.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>

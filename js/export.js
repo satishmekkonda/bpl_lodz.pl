@@ -109,3 +109,106 @@ function shareEmail(divId) {
     const email = prompt("Enter email address to send results to:");
     if (email) alert("Preparing attachment... (Requires EmailJS Setup)");
 }
+
+// --- LIVE PAGE SPECIFIC EXPORTS ---
+
+async function exportLiveImage() {
+    const content = document.getElementById('capture-overview');
+    
+    // Create a temporary wrapper to ensure styles are applied correctly during capture
+    const wrapper = document.createElement('div');
+    wrapper.style.padding = '20px';
+    wrapper.style.background = '#f1f5f9'; // Matches your body color
+    wrapper.style.width = '1100px'; 
+    wrapper.style.position = 'absolute';
+    wrapper.style.left = '-9999px';
+    
+    const clone = content.cloneNode(true);
+
+    // --- ADDED: Force all tables to expand for the screenshot ---
+    const details = clone.querySelectorAll('details');
+    details.forEach(d => d.setAttribute('open', ''));
+
+    // FIX: Ensure the clone's overlay follows the current live visibility
+    const cloneOverlay = clone.querySelector('#final-results-overlay');
+    const realOverlay = document.getElementById('final-results-overlay');
+    if (cloneOverlay && realOverlay) {
+        cloneOverlay.style.visibility = realOverlay.style.visibility;
+        cloneOverlay.style.height = realOverlay.style.height;
+    }
+    
+    wrapper.appendChild(clone);
+    document.body.appendChild(wrapper);
+
+    // Give the browser 100ms to calculate the new heights in the wrapper
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    const canvas = await html2canvas(wrapper, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#f1f5f9'
+    });
+
+    const now = new Date();
+    // Format: 2026-03-10
+    const dateStr = now.toISOString().split('T')[0]; 
+    // Format: 21-15 (24H time)
+    const timeStr = now.toLocaleTimeString('en-GB', { hour12: false }).replace(/:/g, '-');
+    
+    const link = document.createElement('a');
+    link.download = `BPL_Live_${dateStr}.png`;
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+    
+    document.body.removeChild(wrapper);
+}
+
+async function exportLivePDF() {
+    const { jsPDF } = window.jspdf;
+    const content = document.getElementById('capture-overview');
+    
+    const wrapper = document.createElement('div');
+    wrapper.style.padding = '20px';
+    wrapper.style.background = '#f1f5f9';
+    wrapper.style.width = '1100px';
+    wrapper.style.position = 'absolute';
+    wrapper.style.left = '-9999px';
+    
+    const clone = content.cloneNode(true);
+
+    // --- ADDED: Force all tables to expand for the PDF ---
+    const details = clone.querySelectorAll('details');
+    details.forEach(d => d.setAttribute('open', ''));
+
+    wrapper.appendChild(clone);
+    document.body.appendChild(wrapper);
+
+    const canvas = await html2canvas(wrapper, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#f1f5f9'
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    
+    // DYNAMIC PDF SIZING:
+    // This calculates the height based on your content so it doesn't get cut off
+    const imgWidth = 210; // A4 Width in mm
+    const pageHeight = 297; // A4 Standard height
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+    // 1. Create the timestamp for the filename
+    const now = new Date();
+    const dateStr = now.toISOString().split('T')[0]; // YYYY-MM-DD
+    const timeStr = now.toLocaleTimeString('en-GB', { hour12: false }).replace(/:/g, '-'); // HH-mm-ss
+    const fullFilename = `BPL_Live_${dateStr}.pdf`;
+    
+    // If the content is taller than A4, we create a custom-sized PDF page to fit it all
+    const pdf = new jsPDF('p', 'mm', [imgWidth, Math.max(pageHeight, imgHeight)]);
+    
+    pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+    pdf.save(fullFilename);
+    
+    document.body.removeChild(wrapper);
+}

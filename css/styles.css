@@ -375,3 +375,46 @@ input, select { width: 100%; box-sizing: border-box; }
     margin: 0 0 10px 0;
     color: #1e3a8a;
 }
+
+/* Container for the first 3 matches */
+.playoff-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
+    gap: 15px; 
+    margin-bottom: 30px; 
+}
+
+.live-banner { 
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    color: white; 
+    /* Reduce padding to 15px top/bottom to match table cards */
+    padding: 15px 20px; 
+    border-radius: 12px; 
+    text-align: center; 
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    /* Ensure it doesn't grow wider than the container */
+    width: 100%;
+    box-sizing: border-box; 
+}
+
+/* Ensure the blinking dot stays aligned with the text */
+.live-dot {
+    height: 8px;
+    width: 8px;
+    background-color: #ff4b4b;
+    border-radius: 50%;
+    display: inline-block;
+    animation: blink 1.5s infinite;
+}
+
+/* Special class to turn the blue banner into a Gold Winner banner */
+/* Gold Mode Styling */
+.banner-finished {
+    background: linear-gradient(135deg, #b8860b 0%, #ffd700 100%) !important;
+    border: 2px solid #856404;
+    transition: all 0.8s ease-in-out;
+}
+.banner-finished h1, .banner-finished div {
+    color: #000 !important; /* Makes text black for better contrast on gold */
+}

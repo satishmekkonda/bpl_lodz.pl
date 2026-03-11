@@ -6,6 +6,39 @@ let playoffScores = {
     final: { sA: '', sB: '', done: false, teamA: '', teamB: '' }
 };
 
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+// Check if user is already logged in
+firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+        // User is signed in, hide the login overlay
+        document.getElementById('admin-login-overlay').style.display = 'none';
+    } else {
+        // No user is signed in, show the overlay
+        document.getElementById('admin-login-overlay').style.display = 'flex';
+    }
+});
+
+function handleLogin() {
+    const email = document.getElementById('admin-email').value;
+    const pass = document.getElementById('admin-pass').value;
+    
+    firebase.auth().signInWithEmailAndPassword(email, pass)
+        .catch((error) => {
+            document.getElementById('login-error').innerText = "Access Denied: " + error.message;
+        });
+}
+
+function handleLogout() {
+    firebase.auth().signOut();
+}
+
+
+
+
 function generateSchedule() {
     // --- NEW: PREVENTION CHECK ---
     // Added to prevent accidental reshuffling when you just want to view the schedule
@@ -515,4 +548,28 @@ function updatePlayoffScore(matchId, side) {
     }
     // SAVE DATA AFTER EVERY KEYSTROKE
     saveData();
+}
+
+function toggleTournamentStatus() {
+    const statusRef = db.ref('live_tournament/finished');
+    
+    statusRef.once('value', (snapshot) => {
+        const isFinished = snapshot.val() || false;
+        const newStatus = !isFinished;
+        
+        // Update Firebase
+        statusRef.set(newStatus);
+        
+        // Update Admin UI Button Appearance
+        const btn = document.getElementById('finish-btn');
+        if (newStatus) {
+            btn.innerText = "▶ Resume Tournament";
+            btn.style.backgroundColor = "#4ade80"; // Green for resume
+            alert("Tournament Marked as Finished!");
+        } else {
+            btn.innerText = "🏆 Finish Tournament";
+            btn.style.backgroundColor = "#ffd700"; // Gold for finish
+            alert("Tournament Resumed!");
+        }
+    });
 }
