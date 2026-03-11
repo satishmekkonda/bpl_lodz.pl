@@ -7,4 +7,5 @@ Doubles Partners are a mix of one advanced and one intermediate
 Each time a tournament is initiated the same set of players are not partners again
 
 bpl_admin url: https://satishmekkonda.github.io/bpl.lodz.pl/
+
 bpl_live_tracker url: https://satishmekkonda.github.io/bpl.lodz.pl/live
