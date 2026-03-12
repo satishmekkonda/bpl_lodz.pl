@@ -111,13 +111,13 @@ function shareEmail(divId) {
 }
 
 // --- LIVE PAGE SPECIFIC EXPORTS ---
-async function exportLiveImage() {
+function exportLiveImage() {
     const content = document.getElementById('capture-overview');
     
-    // 1. Create a hidden wrapper so the "stretching" is invisible to the user
+    // 1. Create a hidden wrapper
     const wrapper = document.createElement('div');
     wrapper.style.position = 'absolute';
-    wrapper.style.left = '-9999px'; // Move it far off-screen
+    wrapper.style.left = '-9999px'; 
     wrapper.style.top = '0';
     wrapper.style.width = '1100px'; 
     wrapper.style.background = '#f1f5f9';
@@ -125,8 +125,7 @@ async function exportLiveImage() {
     // 2. Clone the content
     const clone = content.cloneNode(true);
     
-    // FIX: Manually sync the Champion box and Overlay to the clone
-    // This ensures the dynamic Firebase data is actually inside the clone
+    // Manual sync for Champions and Overlay
     const realChamp = document.getElementById('champion-display');
     const cloneChamp = clone.querySelector('#champion-display');
     if (realChamp && cloneChamp) {
@@ -148,32 +147,39 @@ async function exportLiveImage() {
     wrapper.appendChild(clone);
     document.body.appendChild(wrapper);
 
-    // Small delay to let the browser render the off-screen clone
-    await new Promise(resolve => setTimeout(resolve, 150));
-
-    try {
-        const canvas = await html2canvas(wrapper, {
+    // Give the browser a moment to render the off-screen clone
+    setTimeout(function() {
+        html2canvas(wrapper, {
             scale: 2,
             useCORS: true,
             logging: false,
             backgroundColor: '#f1f5f9',
             width: 1100
+        }).then(function(canvas) {
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0]; 
+            const imageData = canvas.toDataURL("image/png");
+
+            // MOBILE FIX: Some mobile browsers block link.click() 
+            // We use a more direct approach for the download
+            const link = document.createElement('a');
+            link.setAttribute('href', imageData);
+            link.setAttribute('download', `BPL_Live_${dateStr}.png`);
+            
+            // Append to body briefly for mobile compatibility
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Cleanup the wrapper
+            document.body.removeChild(wrapper);
+        }).catch(function(error) {
+            console.error("Capture failed:", error);
+            if (document.body.contains(wrapper)) {
+                document.body.removeChild(wrapper);
+            }
         });
-
-        const now = new Date();
-        const dateStr = now.toISOString().split('T')[0]; 
-        
-        const link = document.createElement('a');
-        link.download = `BPL_Live_${dateStr}.png`; 
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-
-    } catch (error) {
-        console.error("Capture failed:", error);
-    } finally {
-        // Remove the invisible wrapper
-        document.body.removeChild(wrapper);
-    }
+    }, 250); // Slightly longer delay for mobile rendering
 }
 
 async function exportLivePDF() {
