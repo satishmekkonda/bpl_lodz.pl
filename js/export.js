@@ -111,57 +111,69 @@ function shareEmail(divId) {
 }
 
 // --- LIVE PAGE SPECIFIC EXPORTS ---
-
 async function exportLiveImage() {
     const content = document.getElementById('capture-overview');
     
-    // Create a temporary wrapper to ensure styles are applied correctly during capture
+    // 1. Create a hidden wrapper so the "stretching" is invisible to the user
     const wrapper = document.createElement('div');
-    wrapper.style.padding = '20px';
-    wrapper.style.background = '#f1f5f9'; // Matches your body color
-    wrapper.style.width = '1100px'; 
     wrapper.style.position = 'absolute';
-    wrapper.style.left = '-9999px';
+    wrapper.style.left = '-9999px'; // Move it far off-screen
+    wrapper.style.top = '0';
+    wrapper.style.width = '1100px'; 
+    wrapper.style.background = '#f1f5f9';
     
+    // 2. Clone the content
     const clone = content.cloneNode(true);
+    
+    // FIX: Manually sync the Champion box and Overlay to the clone
+    // This ensures the dynamic Firebase data is actually inside the clone
+    const realChamp = document.getElementById('champion-display');
+    const cloneChamp = clone.querySelector('#champion-display');
+    if (realChamp && cloneChamp) {
+        cloneChamp.innerHTML = realChamp.innerHTML;
+    }
+    
+    const realOverlay = document.getElementById('final-results-overlay');
+    const cloneOverlay = clone.querySelector('#final-results-overlay');
+    if (realOverlay && cloneOverlay) {
+        cloneOverlay.style.visibility = realOverlay.style.visibility;
+        cloneOverlay.style.height = realOverlay.style.height;
+        cloneOverlay.style.margin = realOverlay.style.margin;
+    }
 
-    // --- ADDED: Force all tables to expand for the screenshot ---
+    // Open all details in the clone
     const details = clone.querySelectorAll('details');
     details.forEach(d => d.setAttribute('open', ''));
 
-    // FIX: Ensure the clone's overlay follows the current live visibility
-    const cloneOverlay = clone.querySelector('#final-results-overlay');
-    const realOverlay = document.getElementById('final-results-overlay');
-    if (cloneOverlay && realOverlay) {
-        cloneOverlay.style.visibility = realOverlay.style.visibility;
-        cloneOverlay.style.height = realOverlay.style.height;
-    }
-    
     wrapper.appendChild(clone);
     document.body.appendChild(wrapper);
 
-    // Give the browser 100ms to calculate the new heights in the wrapper
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Small delay to let the browser render the off-screen clone
+    await new Promise(resolve => setTimeout(resolve, 150));
 
-    const canvas = await html2canvas(wrapper, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#f1f5f9'
-    });
+    try {
+        const canvas = await html2canvas(wrapper, {
+            scale: 2,
+            useCORS: true,
+            logging: false,
+            backgroundColor: '#f1f5f9',
+            width: 1100
+        });
 
-    const now = new Date();
-    // Format: 2026-03-10
-    const dateStr = now.toISOString().split('T')[0]; 
-    // Format: 21-15 (24H time)
-    const timeStr = now.toLocaleTimeString('en-GB', { hour12: false }).replace(/:/g, '-');
-    
-    const link = document.createElement('a');
-    link.download = `BPL_Live_${dateStr}.png`;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-    
-    document.body.removeChild(wrapper);
+        const now = new Date();
+        const dateStr = now.toISOString().split('T')[0]; 
+        
+        const link = document.createElement('a');
+        link.download = `BPL_Live_${dateStr}.png`; 
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+
+    } catch (error) {
+        console.error("Capture failed:", error);
+    } finally {
+        // Remove the invisible wrapper
+        document.body.removeChild(wrapper);
+    }
 }
 
 async function exportLivePDF() {
