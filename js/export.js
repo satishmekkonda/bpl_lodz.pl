@@ -113,73 +113,69 @@ function shareEmail(divId) {
 // --- LIVE PAGE SPECIFIC EXPORTS ---
 function exportLiveImage() {
     const content = document.getElementById('capture-overview');
-    
-    // 1. Create a hidden wrapper
     const wrapper = document.createElement('div');
-    wrapper.style.position = 'absolute';
-    wrapper.style.left = '-9999px'; 
-    wrapper.style.top = '0';
-    wrapper.style.width = '1100px'; 
-    wrapper.style.background = '#f1f5f9';
+    wrapper.style.cssText = 'position:absolute; left:-9999px; top:0; width:1100px; background:#f1f5f9;';
     
-    // 2. Clone the content
     const clone = content.cloneNode(true);
     
     // Manual sync for Champions and Overlay
     const realChamp = document.getElementById('champion-display');
     const cloneChamp = clone.querySelector('#champion-display');
-    if (realChamp && cloneChamp) {
-        cloneChamp.innerHTML = realChamp.innerHTML;
-    }
+    if (realChamp && cloneChamp) { cloneChamp.innerHTML = realChamp.innerHTML; }
     
     const realOverlay = document.getElementById('final-results-overlay');
     const cloneOverlay = clone.querySelector('#final-results-overlay');
     if (realOverlay && cloneOverlay) {
         cloneOverlay.style.visibility = realOverlay.style.visibility;
-        cloneOverlay.style.height = realOverlay.style.height;
-        cloneOverlay.style.margin = realOverlay.style.margin;
+        cloneOverlay.style.height = 'auto';
+        cloneOverlay.style.margin = '30px 0';
     }
 
-    // Open all details in the clone
-    const details = clone.querySelectorAll('details');
-    details.forEach(d => d.setAttribute('open', ''));
-
+    clone.querySelectorAll('details').forEach(d => d.setAttribute('open', ''));
     wrapper.appendChild(clone);
     document.body.appendChild(wrapper);
 
-    // Give the browser a moment to render the off-screen clone
-    setTimeout(function() {
+    setTimeout(() => {
         html2canvas(wrapper, {
             scale: 2,
             useCORS: true,
-            logging: false,
             backgroundColor: '#f1f5f9',
             width: 1100
-        }).then(function(canvas) {
-            const now = new Date();
-            const dateStr = now.toISOString().split('T')[0]; 
-            const imageData = canvas.toDataURL("image/png");
+        }).then(canvas => {
+            const dataUrl = canvas.toDataURL("image/png");
+            const dateStr = new Date().toISOString().split('T')[0];
+            const fileName = `BPL_Live_${dateStr}.png`;
 
-            // MOBILE FIX: Some mobile browsers block link.click() 
-            // We use a more direct approach for the download
+            // --- MOBILE STABILITY LOGIC ---
+            // 1. Create the link
             const link = document.createElement('a');
-            link.setAttribute('href', imageData);
-            link.setAttribute('download', `BPL_Live_${dateStr}.png`);
-            
-            // Append to body briefly for mobile compatibility
+            link.href = dataUrl;
+            link.download = fileName;
             document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
             
-            // Cleanup the wrapper
+            // 2. Try the automatic download
+            link.click();
+
+            // 3. SAFETY NET FOR IPHONES: 
+            // If the download doesn't trigger immediately, we open it in a new window.
+            // This is the "Open, Long-Press, Save" method.
+            setTimeout(() => {
+                const newWindow = window.open();
+                if (newWindow) {
+                    newWindow.document.write(`<img src="${dataUrl}" style="width:100%" />`);
+                    newWindow.document.title = fileName;
+                    alert("If download didn't start, long-press the image in the new tab to save it!");
+                }
+            }, 500);
+
+            // Cleanup
+            document.body.removeChild(link);
             document.body.removeChild(wrapper);
-        }).catch(function(error) {
-            console.error("Capture failed:", error);
-            if (document.body.contains(wrapper)) {
-                document.body.removeChild(wrapper);
-            }
+        }).catch(err => {
+            console.error(err);
+            document.body.removeChild(wrapper);
         });
-    }, 250); // Slightly longer delay for mobile rendering
+    }, 300);
 }
 
 async function exportLivePDF() {
